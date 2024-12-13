@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Tra cứu chuyến bay - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/employeestyles.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+
+        <nav class="menu">
+            <a href="/logout" class="btn-primary">Đăng xuất</a>
+        </nav>
+</header>
+
+<main class="main-container">
+    <div class="_sidebar">
+        <ul class="menu-list">
+            <li><a href="/employee_sell_ticket" class="menu-item">Bán vé</a></li>
+            <li><a href="/employee_flight_search" class="menu-item">Tra cứu chuyến bay</a></li>
+            <li><a href="/employee_schedule_flight" class="menu-item">Lập lịch chuyến bay</a></li>
+        </ul>
+    </div>
+
+    <div class="search_flight_content">
+        <h2 >Tra cứu chuyến bay</h2>
+        <form>
+            <label for="search_flight">Nhập mã chuyến bay:</label>
+            <input type="text" id="search_flight" name="search_flight">
+            <label for="search_time_flight">Nhập thời gian chuyến bay:</label>
+            <input type="datetime-local" id="search_time_flight" name="search_time_flight">
+
+            <button type="submit" class="btn-primary">Tra cứu</button>
+        </form>
+    </div>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

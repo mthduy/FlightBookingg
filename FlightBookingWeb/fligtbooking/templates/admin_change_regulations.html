@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thay đổi quy định - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/adminstyles.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="/" class="logo">TravelSky</a>
+        <nav class="menu">
+            <a href="{{ url_for('admin') }}" class="btn-primary">Quay lại</a>
+        </nav>
+    </header>
+
+    <main class="admin-regulations-main-container">
+        <h1>Thay đổi quy định</h1>
+
+        <form class="regulations-form">
+            <!-- Quy định về sân bay -->
+            <fieldset>
+                <legend>Quy định về sân bay</legend>
+                <label for="airport-count">Số lượng sân bay tối đa:</label>
+                <input type="number" id="airport-count" name="airport-count" min="1" max="10" placeholder="Nhập số lượng sân bay" required>
+
+                <label for="min-flight-time">Thời gian bay tối thiểu (phút):</label>
+                <input type="number" id="min-flight-time" name="min-flight-time" min="0" placeholder="Nhập thời gian bay tối thiểu" required>
+
+                <label for="max-intermediate-airports">Số sân bay trung gian tối đa:</label>
+                <input type="number" id="max-intermediate-airports" name="max-intermediate-airports" min="0" max="5" placeholder="Nhập số sân bay trung gian tối đa" required>
+
+                <label for="min-stop-time">Thời gian dừng tối thiểu tại sân bay trung gian (phút):</label>
+                <input type="number" id="min-stop-time" name="min-stop-time" min="0" placeholder="Nhập thời gian dừng tối thiểu tại sân bay trung gian" required>
+
+                <label for="max-stop-time">Thời gian dừng tối đa tại sân bay trung gian (phút):</label>
+                <input type="number" id="max-stop-time" name="max-stop-time" min="0" placeholder="Nhập thời gian dừng tối đa tại sân bay trung gian" required>
+            </fieldset>
+
+            <!-- Quy định về vé -->
+            <fieldset>
+                <legend>Quy định về vé</legend>
+                <label for="ticket-class-count">Số lượng hạng vé:</label>
+                <input type="number" id="ticket-class-count" name="ticket-class-count" min="1" max="5" placeholder="Nhập số lượng hạng vé" required>
+
+                <label>Bảng đơn giá vé:</label>
+                <table id="ticket-price-table">
+                    <thead>
+                        <tr>
+                            <th>Hạng vé</th>
+                            <th>Đơn giá (VND)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="class-1" placeholder="Ví dụ: Hạng 1" required></td>
+                            <td><input type="number" name="price-1" placeholder="Nhập đơn giá" required></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="class-2" placeholder="Ví dụ: Hạng 2" required></td>
+                            <td><input type="number" name="price-2" placeholder="Nhập đơn giá" required></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="class-3" placeholder="Ví dụ: Hạng 3" required></td>
+                            <td><input type="number" name="price-3" placeholder="Nhập đơn giá" required></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </fieldset>
+
+            <!-- Quy định về bán và đặt vé -->
+            <fieldset>
+                <legend>Quy định về bán và đặt vé</legend>
+                <label for="ticket-sale-time">Thời gian bán vé (ngày):</label>
+                <input type="number" id="ticket-sale-time" name="ticket-sale-time" min="0" placeholder="Nhập thời gian bán vé" required>
+
+                <label for="ticket-booking-time">Thời gian đặt vé (ngày):</label>
+                <input type="number" id="ticket-booking-time" name="ticket-booking-time" min="0" placeholder="Nhập thời gian đặt vé" required>
+            </fieldset>
+
+            <button type="submit" class="btn-primary">Lưu thay đổi</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>© 2024 TravelSky</p>
+    </footer>
+</body>
+</html>

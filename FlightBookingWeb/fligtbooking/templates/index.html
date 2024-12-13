@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ - Đặt vé máy bay</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+    <div class="container">
+        <nav class="menu">
+            {% if session.get('role') == 'employee' %}
+            <a href="/employee" class="btn-secondary">Nhân viên</a>
+            {% endif %}
+            {% if session.get('role') == 'admin' %}
+            <a href="/admin" class="btn-secondary">Quản trị viên</a>
+            {% endif %}
+            {% if not session.get('user_logged_in') %}
+            <a href="/login" class="btn-secondary">Đăng nhập</a>
+            <a href="/register" class="btn-primary">Đăng ký</a>
+            {% endif %}
+            {% if session.get('user_logged_in') %}
+            <a href="#" class="btn-secondary">Chào, {{ session['role'] }}</a>
+            <a href="/logout" class="btn-secondary">Đăng xuất</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+<header class="hero">
+    <div class="hero-content">
+        <h1>Chào mừng bạn đến với <span class="highlight">TravelSky</span></h1>
+        <p>Đặt vé máy bay nhanh chóng và dễ dàng, mọi lúc mọi nơi.</p>
+       {% if session['user_logged_in'] %}
+            <!-- Nếu người dùng đã đăng nhập, chuyển đến trang tìm kiếm -->
+            <a class="btn-primary" href="{{ url_for('search') }}">Đặt vé ngay</a>
+        {% else %}
+            <!-- Nếu chưa đăng nhập, yêu cầu đăng nhập trước -->
+            <a class="btn-primary" href="{{ url_for('login') }}?next={{ url_for('search') }}">Đặt vé ngay</a>
+        {% endif %}
+    </div>
+</header>
+
+<main class="container">
+    <section class="features">
+        <h2>Tại sao chọn chúng tôi?</h2>
+        <div class="feature-item">
+            <img src="/static/images/img.png" alt="Giá tốt nhất" class="feature-icon">
+            <h3>Giá tốt nhất</h3>
+            <p>Chúng tôi cung cấp giá vé máy bay cạnh tranh nhất trên thị trường.</p>
+        </div>
+        <div class="feature-item">
+            <img src="/static/images/img_1.png" alt="Nhiều lựa chọn" class="feature-icon">
+            <h3>Nhiều lựa chọn</h3>
+            <p>Hàng nghìn chuyến bay từ các hãng hàng không uy tín.</p>
+        </div>
+        <div class="feature-item">
+            <img src="/static/images/img_2.png" alt="Hỗ trợ 24/7" class="feature-icon">
+            <h3>Hỗ trợ 24/7</h3>
+            <p>Đội ngũ hỗ trợ khách hàng chuyên nghiệp, luôn sẵn sàng giúp đỡ bạn.</p>
+        </div>
+    </section>
+
+    <section class="cta">
+        <h2>Đừng bỏ lỡ!</h2>
+        <p>Bắt đầu hành trình của bạn ngay hôm nay với giá vé tốt nhất.</p>
+        <a href="/search" class="btn-secondary">Tìm chuyến bay ngay</a>
+    </section>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+</body>
+</html>

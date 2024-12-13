@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê báo cáo - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+     <link rel="stylesheet" href="/static/css/adminstyles.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="/" class="logo">TravelSky</a>
+        <nav class="menu">
+            <a href="{{ url_for('admin') }}" class="btn-primary">Quay lại</a>
+        </nav>
+    </header>
+
+    <main class="admin-report-main-container">
+        <h1>Thống kê báo cáo</h1>
+        <form>
+            <label>Chọn tháng:</label>
+            <select>
+                <option>Tháng 1</option>
+                <option>Tháng 2</option>
+                <option>Tháng 3</option>
+                <!-- ... -->
+            </select>
+            <button type="button">Xem báo cáo</button>
+        </form>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Tuyến bay</th>
+                    <th>Doanh thu</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Hà Nội - TP.HCM</td>
+                    <td>5,000,000,000 VND</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>© 2024 TravelSky</p>
+    </footer>
+</body>
+</html>

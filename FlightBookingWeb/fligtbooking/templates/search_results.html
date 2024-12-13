@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả tìm kiếm - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="body">
+
+<header class="navbar">
+    <div class="container">
+        <a href="/" class="logo">TravelSky</a>
+    </div>
+</header>
+
+<main class="search-result-container">
+    <h1 class="search-result-title">Kết quả tìm kiếm</h1>
+    <p class="search-result-summary">
+        Chuyến bay từ <strong>{{ departure }}</strong> đến <strong>{{ destination }}</strong> ngày <strong>{{ date }}</strong>
+    </p>
+
+    {% if flights %}
+    <ul class="search-results-list">
+        {% for flight in flights %}
+        <li class="search-result-item">
+            <p>Mã chuyến bay: <strong>{{ flight.flight }}</strong></p>
+            <p>Giờ bay: <strong>{{ flight.time }}</strong></p>
+            <p>Giá: <strong>{{ flight.price }}</strong></p>
+            <a href="{{ url_for('booking', flight_id=flight.flight) }}" class="search-btn-primary">Đặt vé</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="search-no-results">Không tìm thấy chuyến bay nào phù hợp. Vui lòng thử lại.</p>
+    {% endif %}
+</main>
+
+<footer >
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý nhân viên - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/adminstyles.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="/" class="logo">TravelSky</a>
+        <nav class="menu">
+            <a href="{{ url_for('admin') }}" class="btn-primary">Quay lại</a>
+        </nav>
+    </header>
+
+    <main class="manage-employees-main-container">
+        <h1>Quản lý nhân viên</h1>
+        <form>
+            <input type="text" placeholder="Nhập tên nhân viên..." />
+            <input type="text" placeholder="Chức vụ..." />
+            <button type="button">Thêm nhân viên</button>
+            <button type="button">Tìm kiếm</button>
+        </form>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã NV</th>
+                    <th>Tên</th>
+                    <th>Chức vụ</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>001</td>
+                    <td>Nguyễn Văn A</td>
+                    <td>Nhân viên bán vé</td>
+                    <td><button>Xóa</button> <button>Sửa</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>© 2024 TravelSky</p>
+    </footer>
+</body>
+</html>

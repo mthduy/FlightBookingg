@@ -1,0 +1,32 @@
+<!-- booking_success.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt vé thành công - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body >
+
+<header class="navbar">
+    <div class="container">
+        <a href="/" class="logo">TravelSky</a>
+    </div>
+</header>
+
+<main class="booking-success-container" >
+    <h1 class="booking-success-title">Đặt vé thành công!</h1>
+    <p>Chuyến bay: {{ flight.flight }}</p>
+    <p>Giờ bay: {{ flight.time }}</p>
+    <p>Số lượng hành khách: {{ passengers }}</p>
+    <p>Email xác nhận: {{ email }}</p>
+    <p>Cảm ơn bạn đã đặt vé với TravelSky!</p>
+</main>
+
+<footer >
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bán vé - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/employeestyles.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+        <nav class="menu">
+            <a href="/logout" class="btn-primary">Đăng xuất</a>
+        </nav>
+</header>
+
+<main class="main-container">
+    <div class="_sidebar">
+        <ul class="menu-list">
+            <li><a href="/employee_sell_ticket" class="menu-item">Bán vé</a></li>
+            <li><a href="/employee_flight_search" class="menu-item">Tra cứu chuyến bay</a></li>
+            <li><a href="/employee_schedule_flight" class="menu-item">Lập lịch chuyến bay</a></li>
+        </ul>
+    </div>
+
+    <div class="sell_ticket_content">
+        <h2>Bán vé</h2>
+        <form>
+            <label for="flight">Chọn chuyến bay:</label>
+            <select id="flight" name="flight">
+                <option value="vn123">VN123</option>
+                <option value="vn456">VN456</option>
+            </select>
+
+            <!-- Số lượng hành khách -->
+            <label for="passengers">Số lượng hành khách:</label>
+            <input type="number" id="passengers" name="passengers" min="1" max="10" required>
+
+            <!-- CMND/CCCD -->
+            <label for="id_card">CMND/CCCD:</label>
+            <input type="text" id="id_card" name="id_card" required>
+
+            <!-- Điện thoại -->
+            <label for="phone">Điện thoại:</label>
+            <input type="tel" id="phone" name="phone" required>
+
+            <!-- Hạng vé -->
+            <label for="ticket_class">Hạng vé:</label>
+            <select id="ticket_class" name="ticket_class">
+                <option value="economy">Phổ thông</option>
+                <option value="business">Thương gia</option>
+            </select>
+
+            <!-- Giá tiền -->
+            <label for="price">Giá tiền:</label>
+            <input type="text" id="price" name="price" readonly>
+
+
+            <button type="submit" class="btn-primary">Bán vé</button>
+        </form>
+    </div>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

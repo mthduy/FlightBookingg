@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Lập lịch chuyến bay - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/employeestyles.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+
+        <nav class="menu">
+            <a href="/logout" class="btn-primary">Đăng xuất</a>
+        </nav>
+</header>
+
+<main class="main-container">
+    <div class="_sidebar">
+        <ul class="menu-list">
+            <li><a href="/employee_sell_ticket" class="menu-item">Bán vé</a></li>
+            <li><a href="/employee_flight_search" class="menu-item">Tra cứu chuyến bay</a></li>
+            <li><a href="/employee_schedule_flight" class="menu-item">Lập lịch chuyến bay</a></li>
+        </ul>
+    </div>
+
+    <div class="schedule_flight_content">
+        <h2>Lập lịch chuyến bay</h2>
+        <form>
+            <label for="flight_id">Mã chuyến bay:</label>
+            <input type="text" id="flight_id" name="flight_id" required>
+
+            <label for="departure_time">Thời gian khởi hành:</label>
+            <input type="datetime-local" id="departure_time" name="departure_time" required>
+
+            <label for="departure_airport">Sân bay đi:</label>
+            <input type="text" id="departure_airport" name="departure_airport" required>
+
+            <label for="arrival_airport">Sân bay đến:</label>
+            <input type="text" id="arrival_airport" name="arrival_airport" required>
+
+            <label for="flight_time">Ngày – giờ:</label>
+            <input type="datetime-local" id="flight_time" name="flight_time" required>
+
+            <label for="flight_duration">Thời gian bay:</label>
+            <input type="text" id="flight_duration" name="flight_duration" required>
+
+            <label for="first_class_seats">Số lượng ghế hạng 1:</label>
+            <input type="number" id="first_class_seats" name="first_class_seats" required>
+
+            <label for="second_class_seats">Số lượng ghế hạng 2:</label>
+            <input type="number" id="second_class_seats" name="second_class_seats" required>
+
+            <div class="layover-section">
+                <h3>Sân bay trung gian</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Sân bay trung gian</th>
+                            <th>Thời gian dừng</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><input type="text" name="layover_airport_1"></td>
+                            <td><input type="text" name="layover_time_1"></td>
+                            <td><input type="text" name="layover_note_1"></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><input type="text" name="layover_airport_2"></td>
+                            <td><input type="text" name="layover_time_2"></td>
+                            <td><input type="text" name="layover_note_2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit" class="btn-primary">Lập lịch chuyến bay</button>
+        </form>
+    </div>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

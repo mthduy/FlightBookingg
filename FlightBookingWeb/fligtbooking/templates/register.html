@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+</header>
+
+<main >
+    <section class="register-form">
+        <h1>Đăng ký</h1>
+        <form action="/register" method="post">
+            <label for="role">Bạn là: </label>
+            <select id="role" name="role" class="select-register"required>
+                <option value="customer">Khách hàng</option>
+                <option value="employee">Nhân viên</option>
+                <option value="admin">Người quản trị</option>
+            </select>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required placeholder="Nhập email của bạn">
+
+            <label for="password">Mật khẩu:</label>
+            <input type="password" id="password" name="password" required placeholder="Nhập mật khẩu của bạn">
+
+            <label for="confirm-password">Xác nhận mật khẩu:</label>
+            <input type="password" id="confirm-password" name="confirm-password" required placeholder="Xác nhận mật khẩu của bạn">
+
+            <button type="submit" class="btn-primary">Đăng ký</button>
+
+            <p>Bạn đã có tài khoản? <a href="/login">Đăng nhập ngay</a></p>
+        </form>
+    </section>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

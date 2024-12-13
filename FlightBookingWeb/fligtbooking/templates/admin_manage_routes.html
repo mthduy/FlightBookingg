@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tuyến bay - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/adminstyles.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="/" class="logo">TravelSky</a>
+        <nav class="menu">
+            <a href="{{ url_for('admin') }}" class="btn-primary">Quay lại</a>
+        </nav>
+    </header>
+
+    <main class="ad-manage-routes-main-container">
+        <h1 >Quản lý tuyến bay</h1>
+        <form class="route-form">
+            <input type="text" placeholder="Mã tuyến bay..." />
+            <input type="text" placeholder="Điểm đi..." />
+            <input type="text" placeholder="Điểm đến..." />
+            <button type="button">Thêm tuyến bay</button>
+            <button type="button">Tìm kiếm</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã tuyến bay</th>
+                    <th>Điểm đi</th>
+                    <th>Điểm đến</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TB001</td>
+                    <td>Hà Nội</td>
+                    <td>TP.HCM</td>
+                    <td>
+                        <button>Sửa</button>
+                        <button>Xóa</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <footer>
+        <p>© 2024 TravelSky</p>
+    </footer>
+</body>
+</html>
