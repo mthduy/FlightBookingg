@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from dao import get_all_airports
 from select import select
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Đảm bảo key này không thay đổi mỗi lần chạy
@@ -129,7 +131,9 @@ def employee_flight_search():
 
 @app.route('/employee_schedule_flight')
 def employee_schedule_flight():
-    return render_template('employee_schedule_flight.html')
+    with app.app_context():
+        airports = get_all_airports()
+    return render_template('employee_schedule_flight.html', airports=airports)
 
 @app.route('/admin')
 def admin():
@@ -158,4 +162,5 @@ def admin_manage_routes():
     return render_template('admin_manage_routes.html')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    with app.app_context():
+        app.run(debug=True)
