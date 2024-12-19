@@ -1,10 +1,10 @@
+from datetime import datetime, timedelta
+
 from flask import Flask, render_template, request, redirect, url_for, session
-from dao import get_all_airports
+from dao import get_all_airports, add_flight_schedule
 from select import select
 
-
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Đảm bảo key này không thay đổi mỗi lần chạy
+from fligtbooking import app
 
 @app.route("/")
 def home():
@@ -129,11 +129,43 @@ def employee_sell_ticket():
 def employee_flight_search():
     return render_template('employee_flight_search.html')
 
-@app.route('/employee_schedule_flight')
+
+@app.route('/employee_schedule_flight', methods=['GET', 'POST'])
 def employee_schedule_flight():
-    with app.app_context():
-        airports = get_all_airports()
+    # Lấy danh sách các sân bay
+    airports = get_all_airports()
+
+    if not airports:
+        return render_template('employee_schedule_flight.html', airports=airports,
+                               message="Không có sân bay nào trong hệ thống!")
+
+    # Nếu phương thức là POST, xử lý dữ liệu từ form
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        flight_id = request.form.get("flight_id")
+        departure_airport_id = int(request.form.get("departure_airport"))
+        arrival_airport_id = int(request.form.get("arrival_airport"))
+        flight_time = datetime.strptime(request.form.get("flight_time"), "%Y-%m-%dT%H:%M")
+
+        # Chuyển đổi thời gian bay (dạng chuỗi "hh:mm" thành timedelta)
+        flight_duration_str = request.form.get("flight_duration")
+        flight_duration = timedelta(hours=int(flight_duration_str.split(":")[0]),
+                                    minutes=int(flight_duration_str.split(":")[1]))
+
+        first_class_seats = int(request.form.get("first_class_seats"))
+        second_class_seats = int(request.form.get("second_class_seats"))
+
+        # Gọi hàm thêm lịch bay
+        add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
+                            flight_time, flight_duration, first_class_seats, second_class_seats)
+
+        # Thông báo thành công và render lại trang
+        return render_template('employee_schedule_flight.html', airports=airports,
+                               message="Lập lịch chuyến bay thành công!")
+
+    # Nếu là GET, chỉ cần render lại form với danh sách sân bay
     return render_template('employee_schedule_flight.html', airports=airports)
+
 
 @app.route('/admin')
 def admin():
