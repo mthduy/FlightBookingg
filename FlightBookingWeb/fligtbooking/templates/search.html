@@ -3,32 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đặt vé - TravelSky</title>
+    <title>Đặt vé máy bay - TravelSky</title>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body >
-
+<body>
 <header class="navbar">
-
-        <a href="/" class="logo">TravelSky</a>
-
+    <a href="/" class="logo">TravelSky</a>
 </header>
 
 <main class="search-main">
-    <h1 class="search-title">Đặt vé máy bay</h1>
-    <form action="/search" method="post" class="search-form">
+    <h1 class="search-title">Tìm kiếm chuyến bay</h1>
+    <form action="/search" method="post" class="search-form" onsubmit="return validateForm()">
         <label for="from" class="search-label">Điểm khởi hành:</label>
         <select id="from" name="from_location" class="search-select" required>
-                 {% for airport in airports %}
-                   <option value="{{airport.id}}">{{airport.tenSanBay}} ({{airport.maSanBay}})</option>
-                {% endfor %}
+            <option value="" disabled selected>Chọn sân bay khởi hành</option>
+            {% for airport in airports %}
+            <option value="{{ airport.id }}">{{ airport.tenSanBay }} ({{ airport.maSanBay }})</option>
+            {% endfor %}
         </select>
 
         <label for="to" class="search-label">Điểm đến:</label>
         <select id="to" name="to_location" class="search-select" required>
-                 {% for airport in airports %}
-                   <option value="{{airport.id}}">{{airport.tenSanBay}} ({{airport.maSanBay}})</option>
-                {% endfor %}
+            <option value="" disabled selected>Chọn sân bay đến</option>
+            {% for airport in airports %}
+            <option value="{{ airport.id }}">{{ airport.tenSanBay }} ({{ airport.maSanBay }})</option>
+            {% endfor %}
         </select>
 
         <label for="departure-date" class="search-label">Ngày khởi hành:</label>
@@ -38,15 +37,34 @@
         <input type="date" id="return-date" name="return_date" class="search-input">
 
         <label for="passengers" class="search-label">Số lượng hành khách:</label>
-        <input type="number" id="passengers" name="passengers" class="search-input" min="1" required>
+        <input type="number" id="passengers" name="passengers" class="search-input" min="1" max="10" placeholder="1-10" required>
 
         <button type="submit" class="search-btn-primary">Tìm chuyến bay</button>
     </form>
 </main>
 
-<footer >
+<footer>
     <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
 </footer>
 
+<script>
+    function validateForm() {
+        const departureDate = new Date(document.getElementById("departure-date").value);
+        const returnDate = document.getElementById("return-date").value ? new Date(document.getElementById("return-date").value) : null;
+        const passengers = document.getElementById("passengers").value;
+
+        if (returnDate && returnDate < departureDate) {
+            alert("Ngày trở về không thể trước ngày khởi hành.");
+            return false;
+        }
+
+        if (passengers < 1 || passengers > 10) {
+            alert("Số lượng hành khách phải nằm trong khoảng từ 1 đến 10.");
+            return false;
+        }
+
+        return true;
+    }
+</script>
 </body>
 </html>

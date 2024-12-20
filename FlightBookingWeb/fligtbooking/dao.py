@@ -6,6 +6,14 @@ def get_all_airports():
     with app.app_context():  # Đảm bảo chạy trong app context
         return SanBay.query.all()
 
+#Code lấy tên sân bay từ id
+class SanBayNameDAO:
+    @staticmethod
+    def get_airport_name_by_id(airport_id):
+        return db.session.query(SanBay.tenSanBay).filter(SanBay.id == airport_id).scalar()
+
+
+
 #Code thêm chuyến bay , tuyến bay vào database ở Lập lịch
 def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
                         flight_time, flight_duration, first_class_seats, second_class_seats, price):
@@ -32,10 +40,10 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
     db.session.add(chuyen_bay)
     db.session.commit()
 
+
 #Code tìm kiêm chuyeens bay
 def search_flights(from_location=None, to_location=None, departure_date=None, return_date=None, passengers=None):
     query = db.session.query(ChuyenBay).join(TuyenBay)
-
     # Lọc theo sân bay đi
     if from_location:
         query = query.filter(TuyenBay.sanBayDi_id == from_location)

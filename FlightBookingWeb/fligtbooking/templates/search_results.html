@@ -17,17 +17,17 @@
 <main class="search-result-container">
     <h1 class="search-result-title">Kết quả tìm kiếm</h1>
     <p class="search-result-summary">
-        Chuyến bay từ <strong>{{ departure }}</strong> đến <strong>{{ destination }}</strong> ngày <strong>{{ date }}</strong>
+        Chuyến bay từ <strong>{{from_location_name}}</strong> đến <strong>{{to_location_name}}</strong> ngày <strong>{{departure_date}}</strong>
     </p>
 
-    {% if flights %}
+    {% if results %}
     <ul class="search-results-list">
-        {% for flight in flights %}
+        {% for result in results %}
         <li class="search-result-item">
-            <p>Mã chuyến bay: <strong>{{ flight.flight }}</strong></p>
-            <p>Giờ bay: <strong>{{ flight.time }}</strong></p>
-            <p>Giá: <strong>{{ flight.price }}</strong></p>
-            <a href="{{ url_for('booking', flight_id=flight.flight) }}" class="search-btn-primary">Đặt vé</a>
+            <p>Mã chuyến bay: <strong>{{ result.maChuyenBay }}</strong></p>
+            <p>Giờ bay: <strong>{{ result.thoiGianBay }}</strong></p>
+            <p>Giá: <strong>{{ result.giaTien }}</strong> VND</p>
+            <a href="{{ url_for('booking', flight_id=result.id) }}" class="search-btn-primary">Đặt vé</a>
         </li>
         {% endfor %}
     </ul>
@@ -36,7 +36,7 @@
     {% endif %}
 </main>
 
-<footer >
+<footer>
     <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
 </footer>
 
