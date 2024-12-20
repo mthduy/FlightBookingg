@@ -13,6 +13,8 @@ def home():
 # Trang Đặt vé
 @app.route('/search', methods=['GET', 'POST'])
 def search():
+    airports = get_all_airports()
+
     # Kiểm tra trạng thái đăng nhập
     if 'user_logged_in' not in session or session['user_logged_in'] != True:
         return redirect(url_for('login'))  # Nếu chưa đăng nhập, chuyển đến trang đăng nhập
@@ -43,7 +45,7 @@ def search():
         )
 
     # Nếu là GET request, chỉ hiển thị trang tìm kiếm
-    return render_template('search.html')
+    return render_template('search.html', airports=airports)
 
 @app.route('/booking/<flight_id>', methods=['GET', 'POST'])
 def booking(flight_id):
@@ -138,7 +140,6 @@ def employee_schedule_flight():
     if not airports:
         return render_template('employee_schedule_flight.html', airports=airports,
                                message="Không có sân bay nào trong hệ thống!")
-
     # Nếu phương thức là POST, xử lý dữ liệu từ form
     if request.method == 'POST':
         # Lấy dữ liệu từ form
@@ -146,19 +147,16 @@ def employee_schedule_flight():
         departure_airport_id = int(request.form.get("departure_airport"))
         arrival_airport_id = int(request.form.get("arrival_airport"))
         flight_time = datetime.strptime(request.form.get("flight_time"), "%Y-%m-%dT%H:%M")
-
         # Chuyển đổi thời gian bay (dạng chuỗi "hh:mm" thành timedelta)
         flight_duration_str = request.form.get("flight_duration")
         flight_duration = timedelta(hours=int(flight_duration_str.split(":")[0]),
                                     minutes=int(flight_duration_str.split(":")[1]))
-
         first_class_seats = int(request.form.get("first_class_seats"))
         second_class_seats = int(request.form.get("second_class_seats"))
-
+        price = int(request.form.get("price"))
         # Gọi hàm thêm lịch bay
         add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
-                            flight_time, flight_duration, first_class_seats, second_class_seats)
-
+                            flight_time, flight_duration, first_class_seats, second_class_seats, price)
         # Thông báo thành công và render lại trang
         return render_template('employee/employee_schedule_flight.html', airports=airports,
                                message="Lập lịch chuyến bay thành công!")

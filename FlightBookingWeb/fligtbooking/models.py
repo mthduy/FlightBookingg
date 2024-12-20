@@ -41,7 +41,7 @@ class ChuyenBay(db.Model):
     thoiGianBay = Column(Time, nullable=False)  # Thời gian bay
     soGheHang1 = Column(Integer, nullable=False)  # Số ghế hạng 1
     soGheHang2 = Column(Integer, nullable=False)  # Số ghế hạng 2
-
+    giaTien = Column(Integer,nullable=False)
     # Tham chiếu đến bảng TuyenBay
     tuyenBay_id = Column(Integer, ForeignKey('tuyenbay.id'), nullable=False)
     # Mối quan hệ
