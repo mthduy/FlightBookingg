@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Time
+import enum
+
+from flask_login import UserMixin
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Time, Boolean
 from sqlalchemy.orm import relationship
 import datetime
 from fligtbooking import db, app
@@ -90,6 +93,25 @@ class HanhKhach(db.Model):
     soDienThoai = Column(Integer, nullable=False)
 
 
+class Role(enum.Enum):
+    EMPLOYEE = 'Nhân viên'
+    ADMIN = 'Quản lý'
+    CUSTOMER = 'Khách hàng'
+
+
+class User(db.Model,UserMixin):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = Column(String(50), nullable=False)
+    active = Column(Boolean, default=True)
+    avatar = Column(String(200),default="https://res.cloudinary.com/dq5ajyj0q/image/upload/v1734594042/admin-sign-on-laptop-icon-stock-vector_apyuxd.jpg")
+    role = db.Column(db.Enum(Role), nullable=False, default=Role.CUSTOMER)
+
+    def __str__(self):
+        return f"{self.name} - {self.role.value}"
+
+
 # Tạo cơ sở dữ liệu và thêm sân bay mặc định
 if __name__ == "__main__":
     with app.app_context():
@@ -111,4 +133,13 @@ if __name__ == "__main__":
         for sanBay in danhSachSanBay:
             db.session.add(SanBay(maSanBay=sanBay["maSanBay"], tenSanBay=sanBay["tenSanBay"], viTri=sanBay["viTri"]))
 
+        import hashlib
+
+        password = str(hashlib.md5("123".encode('utf-8')).hexdigest())
+        u = User(name="CUSTOMER", email="customer@gmail.com", password=password)
+        u1 = User(name="EMPLOYEE", email="employee@gmail.com", password=password,role=Role.EMPLOYEE)
+        u2 = User(name="ADMIN", email="admin@gmail.com", password=password, role=Role.ADMIN)
+        db.session.add(u)
+        db.session.add(u1)
+        db.session.add(u2)
         db.session.commit()
