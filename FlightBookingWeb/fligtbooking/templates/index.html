@@ -18,13 +18,12 @@
             {% if session.get('role') == 'admin' %}
             <a href="/admin" class="btn-secondary">Quản trị viên</a>
             {% endif %}
-            {% if not session.get('user_logged_in') %}
-            <a href="/login" class="btn-secondary">Đăng nhập</a>
-            <a href="/register" class="btn-primary">Đăng ký</a>
-            {% endif %}
-            {% if session.get('user_logged_in') %}
-            <a href="#" class="btn-secondary">Chào, {{ session['role'] }}</a>
-            <a href="/logout" class="btn-secondary">Đăng xuất</a>
+            {%if current_user.is_authenticated%}
+                <h3>Chao {{current_user.name}}</h3>
+                <a href="/logout" class="btn-secondary">Đăng xuất</a>
+            {%else%}
+                <a href="/login" class="btn-secondary">Đăng nhập</a>
+                <a href="/register" class="btn-primary">Đăng ký</a>
             {% endif %}
         </nav>
     </div>

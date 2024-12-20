@@ -1,4 +1,6 @@
-from fligtbooking.models import TuyenBay, SanBay, ChuyenBay
+import hashlib
+
+from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -55,3 +57,18 @@ def search_flights(from_location=None, to_location=None, departure_date=None, re
         )
     # Sắp xếp theo thời gian khởi hành
     return query.order_by(ChuyenBay.thoiGianKhoiHanh).all()
+
+def auth_user(email, password):
+    with app.app_context():  # Đảm bảo chạy trong app context
+        password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+        user = User.query.filter(User.email == email.strip(), User.password == password).first()
+        return user
+
+def get_user_by_id(user_id):
+    return User.query.get(user_id)
+
+def add_user(name, email, password, avatar):
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    u = User(name=name, email=email, password=password, avatar=avatar)
+    db.session.add(u)
+    db.session.commit()

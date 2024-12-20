@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session
-from dao import get_all_airports, add_flight_schedule
+from flask_login import logout_user, login_user, current_user
+
+import dao
 from select import select
 
-from fligtbooking import app,admin
+from fligtbooking import app,admin,login_manager
+from fligtbooking.models import Role
+
 
 @app.route("/")
 def home():
@@ -13,7 +17,7 @@ def home():
 # Trang Đặt vé
 @app.route('/search', methods=['GET', 'POST'])
 def search():
-    airports = get_all_airports()
+    airports = dao.get_all_airports()
 
     # Kiểm tra trạng thái đăng nhập
     if 'user_logged_in' not in session or session['user_logged_in'] != True:
@@ -73,54 +77,72 @@ def booking(flight_id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
+    if current_user.is_authenticated:
+        return redirect("/")
+    err_msg = None
+    if request.method.__eq__('POST'):
         email = request.form['email']
-        password = request.form['password']
+        password = request.form.get('password')
         role = request.form.get('role')  # Sử dụng .get() để lấy giá trị từ dropdown
-
-        # Kiểm tra nếu vai trò không được chọn
-        if not role:
-            return render_template('login.html', error="Vui lòng chọn vai trò")
-
-        # Kiểm tra thông tin đăng nhập và vai trò
-        if email == 'admin@gmail.com' and password == '123' and role == 'admin':
-            session['user_logged_in'] = True
-            session['role'] = 'admin'  # Lưu vai trò vào session
-            next_page = request.args.get("next", url_for("home"))  # Nếu không có tham số next, chuyển đến trang chủ
-            return redirect("admin")  # Chuyển đến trang yêu cầu sau khi đăng nhập thành công
-
-        elif email == 'customer@gmail.com' and password == '123' and role == 'customer':
-            session['user_logged_in'] = True
-            session['role'] = 'customer'
-            next_page = request.args.get("next", url_for("home"))  # Nếu không có tham số next, chuyển đến trang chủ
+        user = dao.auth_user(email=email, password=password)
+        print(user.name + " " + str(user.role))
+        if user and role=='customer' and user.role==Role.CUSTOMER:
+            login_user(user)
+            next_page = request.args.get("next", "/")  # Nếu không có tham số next, chuyển đến trang chủ
             return redirect(next_page)  # Chuyển đến trang yêu cầu sau khi đăng nhập thành công
-
-        elif email == 'employee@gmail.com' and password == '123' and role == 'employee':
-            session['user_logged_in'] = True
-            session['role'] = 'employee'
-            # next_page = request.args.get("next", url_for("home"))  # Nếu không có tham số next, chuyển đến trang chủ
-            return redirect(url_for("employee"))
-
+        elif user and role=='employee' and user.role==Role.EMPLOYEE:
+            login_user(user)
+            return redirect("/employee")
         else:
-            return render_template('login.html', error="Tên đăng nhập, mật khẩu hoặc vai trò không đúng")
+            err_msg = "Tài khoản hoặc mật khẩu không đúng!"
 
-        # Nếu là GET request, chỉ hiển thị form login
-    return render_template('login.html')
+    return render_template('login.html', err_msg=err_msg)
 
-@app.route('/register')
+
+@app.route('/login-admin', methods=['post'])
+def process_login_admin():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    user = dao.auth_user(email=email, password=password)
+    if user and user.role==Role.ADMIN:
+        login_user(user)
+    else:
+        err_msg = "Tài khoản hoặc mật khẩu không đúng!"
+
+    return redirect('/admin')
+
+@login_manager.user_loader
+def load_user(user_id):
+    return dao.get_user_by_id(user_id=user_id)
+
+@app.route('/register', methods=["get", "post"])
 def register():
+    err_msg = None
+    if request.method.__eq__('POST'):
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
+        if password.__eq__(confirm):
+            ava_path = None
+            name = request.form.get('name')
+            email = request.form.get('email')
+            # avatar = request.files.get('avatar')
+            # if avatar:
+            #     res = cloudinary.uploader.upload(avatar)
+            #     ava_path = res['secure_url']
+            dao.add_user(name=name,email=email, password=password, avatar=ava_path)
+            return redirect('/login')
+        else:
+            err_msg = "Mật khẩu không khớp!"
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
-    session.pop('user_logged_in', None)
-    session.pop('role', None)
-    return redirect(url_for('home'))  # Quay về trang chủ sau khi đăng xuất
+    logout_user()
+    return redirect('/')  # Quay về trang chủ sau khi đăng xuất
+
 
 @app.route("/employee")
 def employee():
-    if session.get("role") != "employee":
-        return redirect(url_for("login"))
     return render_template('employee/employee.html')
 
 @app.route('/employee_sell_ticket')
@@ -135,7 +157,7 @@ def employee_flight_search():
 @app.route('/employee_schedule_flight', methods=['GET', 'POST'])
 def employee_schedule_flight():
     # Lấy danh sách các sân bay
-    airports = get_all_airports()
+    airports = dao.get_all_airports()
 
     if not airports:
         return render_template('employee_schedule_flight.html', airports=airports,
@@ -155,7 +177,7 @@ def employee_schedule_flight():
         second_class_seats = int(request.form.get("second_class_seats"))
         price = int(request.form.get("price"))
         # Gọi hàm thêm lịch bay
-        add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
+        dao.add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
                             flight_time, flight_duration, first_class_seats, second_class_seats, price)
         # Thông báo thành công và render lại trang
         return render_template('employee/employee_schedule_flight.html', airports=airports,
