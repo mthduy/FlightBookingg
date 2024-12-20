@@ -44,10 +44,8 @@ class ChuyenBay(db.Model):
 
     # Tham chiếu đến bảng TuyenBay
     tuyenBay_id = Column(Integer, ForeignKey('tuyenbay.id'), nullable=False)
-
     # Mối quan hệ
     tuyenBay = relationship("TuyenBay", foreign_keys=[tuyenBay_id])  # Liên kết với bảng TuyenBay
-
     # Reverse relationship with SanBayTrungGian
     sanBayTrungGians = relationship("SanBayTrungGian", back_populates="chuyenBay")
 

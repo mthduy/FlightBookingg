@@ -23,7 +23,7 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
     chuyen_bay = ChuyenBay(
         maChuyenBay=flight_id,
         thoiGianKhoiHanh=flight_time,
-        thoiGianDen=flight_time,  # Bạn có thể tính toán thời gian đến dựa trên thời gian bay
+        thoiGianDen=flight_time+flight_duration,
         thoiGianBay=flight_duration,
         soGheHang1=first_class_seats,
         soGheHang2=second_class_seats,

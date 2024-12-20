@@ -119,7 +119,7 @@ def logout():
 def employee():
     if session.get("role") != "employee":
         return redirect(url_for("login"))
-    return render_template('employee.html')
+    return render_template('employee/employee.html')
 
 @app.route('/employee_sell_ticket')
 def employee_sell_ticket():
@@ -127,7 +127,7 @@ def employee_sell_ticket():
 
 @app.route('/employee_flight_search')
 def employee_flight_search():
-    return render_template('employee_flight_search.html')
+    return render_template('employee/employee_flight_search.html')
 
 
 @app.route('/employee_schedule_flight', methods=['GET', 'POST'])
@@ -160,11 +160,11 @@ def employee_schedule_flight():
                             flight_time, flight_duration, first_class_seats, second_class_seats)
 
         # Thông báo thành công và render lại trang
-        return render_template('employee_schedule_flight.html', airports=airports,
+        return render_template('employee/employee_schedule_flight.html', airports=airports,
                                message="Lập lịch chuyến bay thành công!")
 
     # Nếu là GET, chỉ cần render lại form với danh sách sân bay
-    return render_template('employee_schedule_flight.html', airports=airports)
+    return render_template('employee/employee_schedule_flight.html', airports=airports)
 
 
 # @app.route('/admin')
