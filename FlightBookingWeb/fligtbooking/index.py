@@ -7,6 +7,7 @@ import dao
 from select import select
 
 from fligtbooking import app,admin,login_manager
+from fligtbooking.dao import SanBayNameDAO, search_flights
 from fligtbooking.models import Role
 
 
@@ -31,22 +32,19 @@ def search():
         return_date = request.form.get('return_date')  # get() để tránh lỗi khi không có giá trị
         passengers = request.form['passengers']
 
-        # Giả lập kết quả tìm kiếm chuyến bay
-        flights = [
-            {'flight': 'VN123', 'time': '10:00 AM', 'price': '1,000,000 VND'},
-            {'flight': 'VN456', 'time': '2:00 PM', 'price': '1,200,000 VND'},
-        ]
+        results = search_flights( from_location = from_location,
+                                  to_location = to_location,
+                                  departure_date = departure_date,
+                                  return_date = return_date,
+                                  passengers = passengers
+                                  )
+
+        from_locationName = SanBayNameDAO.get_airport_name_by_id(from_location)
+        to_locationName = SanBayNameDAO.get_airport_name_by_id(to_location)
+
 
         # Trả về trang kết quả tìm kiếm
-        return render_template(
-            'search_results.html',
-            flights=flights,
-            departure=from_location,
-            destination=to_location,
-            date=departure_date,
-            return_date=return_date,
-            passengers=passengers
-        )
+        return render_template('search_results.html',results=results,from_locationName=from_locationName,to_locationName=to_locationName,departure_date=departure_date)
 
     # Nếu là GET request, chỉ hiển thị trang tìm kiếm
     return render_template('search.html', airports=airports)
