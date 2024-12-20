@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from dao import get_all_airports, add_flight_schedule
 from select import select
 
-from fligtbooking import app
+from fligtbooking import app,admin
 
 @app.route("/")
 def home():
@@ -123,7 +123,7 @@ def employee():
 
 @app.route('/employee_sell_ticket')
 def employee_sell_ticket():
-    return render_template('employee_sell_ticket.html')
+    return render_template('employee/employee_sell_ticket.html')
 
 @app.route('/employee_flight_search')
 def employee_flight_search():
@@ -167,15 +167,15 @@ def employee_schedule_flight():
     return render_template('employee_schedule_flight.html', airports=airports)
 
 
-@app.route('/admin')
-def admin():
-    if session.get("role") != "admin":
-        return redirect(url_for("login"))
-    return render_template('admin.html')
+# @app.route('/admin')
+# def admin():
+#     if session.get("role") != "admin":
+#         return redirect(url_for("login"))
+#     return render_template('admin/admin.html')
 
 @app.route('/admin_manage_employees')
 def admin_manage_employees():
-    return render_template('admin_manage_employees.html')
+    return render_template('admin/admin_manage_employees.html')
 
 @app.route('/admin_report_statistics')
 def admin_report_statistics():
