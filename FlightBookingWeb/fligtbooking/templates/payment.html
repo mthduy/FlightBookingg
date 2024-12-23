@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả tìm kiếm - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .payment-summary {
+            margin-bottom: 20px;
+        }
+        .payment-summary p {
+            font-size: 1.2rem;
+        }
+        .btn-zalopay {
+            background-color: #00A651;
+            color: white;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            width: 100%;
+        }
+    </style>
+<body class="body">
+
+<header class="navbar">
+    <div class="container">
+        <a href="/" class="logo">TravelSky</a>
+    </div>
+</header>
+
+<main class="search-result-container">
+    <h1 class="search-result-title">Thanh Toán Online</h1>
+  <!-- Payment Section -->
+    <div class="payment-container">
+        <div class="payment-summary">
+            <p><strong>Chuyến bay:</strong> {{flight.maChuyenBay}}</p>
+            <p><strong>Số lượng:</strong> {{passengers}} Ghế</p>
+            <p><strong>Giá:</strong> {{flight.giaTien}} VNĐ</p>
+            <p><strong>Tổng tiền:</strong> {{totalPrice}} VNĐ</p>
+        </div>
+        <!-- ZaloPay Payment Button -->
+       <form action="/order/{{ flight.id }}" method="post">
+            <input type="hidden" name="totalPrice" value="{{ totalPrice }}">
+            <button type="submit" class="btn-zalopay">Thanh Toán qua ZaloPay</button>
+        </form>
+    </div>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+
+</body>
+</html>

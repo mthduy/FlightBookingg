@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session
@@ -20,9 +22,9 @@ def home():
 def search():
     airports = dao.get_all_airports()
 
-    # Kiểm tra trạng thái đăng nhập
-    if 'user_logged_in' not in session or session['user_logged_in'] != True:
-        return redirect(url_for('login'))  # Nếu chưa đăng nhập, chuyển đến trang đăng nhập
+    # Kiểm tra trạng thái đăng nhập (nếu cần)
+    if not current_user.is_authenticated:
+        return redirect("/login")  # Hoặc điều chỉnh đường dẫn phù hợp
 
     if request.method == 'POST':
         # Lấy dữ liệu từ form
@@ -39,38 +41,73 @@ def search():
                                   passengers = passengers
                                   )
 
-        from_locationName = SanBayNameDAO.get_airport_name_by_id(from_location)
-        to_locationName = SanBayNameDAO.get_airport_name_by_id(to_location)
-
+        from_locationname = SanBayNameDAO.get_airport_name_by_id(from_location)
+        to_locationname = SanBayNameDAO.get_airport_name_by_id(to_location)
 
         # Trả về trang kết quả tìm kiếm
-        return render_template('search_results.html',results=results,from_locationName=from_locationName,to_locationName=to_locationName,departure_date=departure_date)
+        return render_template('search_results.html',results=results,from_locationname=from_locationname,to_locationname=to_locationname,departure_date=departure_date)
 
     # Nếu là GET request, chỉ hiển thị trang tìm kiếm
     return render_template('search.html', airports=airports)
 
 @app.route('/booking/<flight_id>', methods=['GET', 'POST'])
 def booking(flight_id):
-    # Giả lập dữ liệu chuyến bay (thực tế có thể lấy từ cơ sở dữ liệu)
-    flights = [
-        {'flight': 'VN123', 'time': '10:00 AM', 'price': '1,000,000 VND'},
-        {'flight': 'VN456', 'time': '2:00 PM', 'price': '1,200,000 VND'},
-    ]
 
-    # Lấy thông tin chuyến bay theo flight_id
-    flight = next(f for f in flights if f['flight'] == flight_id)
+    flight = dao.get_flight(flight_id)
 
     if request.method == 'POST':
         # Xử lý dữ liệu khi người dùng gửi form (lấy thông tin từ form)
         name = request.form['name']
         email = request.form['email']
-        passengers = request.form['passengers']
+        passengers = int(request.form['passengers'])
+        totalPrice = flight.giaTien*passengers
 
         # Giả lập việc lưu thông tin đặt vé hoặc gửi email xác nhận
-        return render_template('booking_results.html', flight=flight, name=name, email=email, passengers=passengers)
+        return render_template('payment.html', flight=flight,passengers=passengers,totalPrice=totalPrice)
 
     # Hiển thị trang đặt vé
-    return render_template('booking.html', flight=flight)
+    return render_template('booking.html',flight=flight)
+
+@app.route('/payment/<flight_id>', methods=['POST', 'GET'])
+def payment(flight_id):
+    # Nếu là POST, lấy totalPrice từ form và chuyển hướng đến trang "order"
+    if request.method == 'POST':
+        totalPrice = request.form['totalPrice']  # Lấy totalPrice từ form
+        return render_template('order.html', totalPrice=totalPrice)
+
+
+@app.route("/order/<flight_id>", methods=["POST"])
+def order(flight_id):
+    # Lấy totalPrice từ form
+    totalPrice = request.form.get('totalPrice')
+    redirect_url = "http://127.0.0.1:5000/callback"
+    if not totalPrice:
+        return "Dữ liệu không hợp lệ!", 400  # Nếu không nhận được totalPrice
+    # Chuyển tiếp đến ZaloPay để thanh toán
+    zalopay_dao = dao.ZaloPayDAO()
+    pay_url = zalopay_dao.create_order(totalPrice, redirect_url)
+    if "Error" not in pay_url:
+        # Nếu không có lỗi, chuyển hướng đến trang thanh toán ZaloPay
+        return redirect(pay_url)
+    else:
+        # Nếu có lỗi, hiển thị thông báo lỗi
+        return pay_url
+
+
+# Callback endpoint
+@app.route("/callback", methods=["GET", "POST"])
+def callback():
+    result = request.args  # Lấy các tham số từ URL callback sandbox ZaloPay
+    status = result.get("status")
+
+    if status == "1":  # Nếu status = 1, thanh toán thành công
+        return redirect(url_for('booking_results'))  # Quay lại trang kết quả của bạn
+    else:
+        return "Thanh toán không thành công! Vui lòng thử lại."
+
+@app.route("/booking_results")
+def booking_results():
+    return render_template("booking_results.html")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -167,6 +204,7 @@ def employee_schedule_flight():
         departure_airport_id = int(request.form.get("departure_airport"))
         arrival_airport_id = int(request.form.get("arrival_airport"))
         flight_time = datetime.strptime(request.form.get("flight_time"), "%Y-%m-%dT%H:%M")
+
         # Chuyển đổi thời gian bay (dạng chuỗi "hh:mm" thành timedelta)
         flight_duration_str = request.form.get("flight_duration")
         flight_duration = timedelta(hours=int(flight_duration_str.split(":")[0]),
@@ -174,9 +212,11 @@ def employee_schedule_flight():
         first_class_seats = int(request.form.get("first_class_seats"))
         second_class_seats = int(request.form.get("second_class_seats"))
         price = int(request.form.get("price"))
+
         # Gọi hàm thêm lịch bay
         dao.add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
                             flight_time, flight_duration, first_class_seats, second_class_seats, price)
+
         # Thông báo thành công và render lại trang
         return render_template('employee/employee_schedule_flight.html', airports=airports,
                                message="Lập lịch chuyến bay thành công!")

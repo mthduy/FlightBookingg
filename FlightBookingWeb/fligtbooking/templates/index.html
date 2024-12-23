@@ -32,13 +32,14 @@
     <div class="hero-content">
         <h1>Chào mừng bạn đến với <span class="highlight">TravelSky</span></h1>
         <p>Đặt vé máy bay nhanh chóng và dễ dàng, mọi lúc mọi nơi.</p>
-       {% if session['user_logged_in'] %}
-            <!-- Nếu người dùng đã đăng nhập, chuyển đến trang tìm kiếm -->
-            <a class="btn-primary" href="{{ url_for('search') }}">Đặt vé ngay</a>
-        {% else %}
-            <!-- Nếu chưa đăng nhập, yêu cầu đăng nhập trước -->
-            <a class="btn-primary" href="{{ url_for('login') }}?next={{ url_for('search') }}">Đặt vé ngay</a>
-        {% endif %}
+{% if current_user.is_authenticated %}
+    <!-- Nếu người dùng đã đăng nhập -->
+    <a class="btn-primary" href="{{ url_for('search') }}">Đặt vé ngay</a>
+{% else %}
+    <!-- Nếu chưa đăng nhập -->
+    <a class="btn-primary" href="{{ url_for('login', next=url_for('search')) }}">Đặt vé ngay</a>
+{% endif %}
+
     </div>
 </header>
 
