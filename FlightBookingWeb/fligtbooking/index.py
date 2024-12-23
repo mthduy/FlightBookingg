@@ -45,7 +45,7 @@ def search():
         to_locationname = SanBayNameDAO.get_airport_name_by_id(to_location)
 
         # Trả về trang kết quả tìm kiếm
-        return render_template('search_results.html',results=results,from_locationname=from_locationname,to_locationname=to_locationname,departure_date=departure_date)
+        return render_template('/search_results.html',results=results,from_locationname=from_locationname,to_locationname=to_locationname,departure_date=departure_date)
 
     # Nếu là GET request, chỉ hiển thị trang tìm kiếm
     return render_template('search.html', airports=airports)
@@ -211,11 +211,13 @@ def employee_schedule_flight():
                                     minutes=int(flight_duration_str.split(":")[1]))
         first_class_seats = int(request.form.get("first_class_seats"))
         second_class_seats = int(request.form.get("second_class_seats"))
-        price = int(request.form.get("price"))
+        first_class_price = int(request.form.get("first_class_price"))
+        second_class_price = int(request.form.get("second_class_price"))
+
 
         # Gọi hàm thêm lịch bay
         dao.add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
-                            flight_time, flight_duration, first_class_seats, second_class_seats, price)
+                            flight_time, flight_duration, first_class_seats, second_class_seats, first_class_price,second_class_price)
 
         # Thông báo thành công và render lại trang
         return render_template('employee/employee_schedule_flight.html', airports=airports,

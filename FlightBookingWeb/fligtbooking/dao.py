@@ -1,7 +1,7 @@
 import hashlib
 import json
 
-from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User
+from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -23,10 +23,10 @@ def get_flight(flight_id):
         return None
 
 
-#Code thêm chuyến bay , tuyến bay vào database ở Lập lịch
 def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
-                        flight_time, flight_duration, first_class_seats, second_class_seats, price):
-    # Tạo đối tượng TuyenBay mới
+                        flight_time, flight_duration, first_class_seats, second_class_seats,
+                        first_class_price, second_class_price):
+    # Tạo đối tượng Tuyến Bay (TuyenBay) mới
     tuyen_bay = TuyenBay(
         maTuyenBay=flight_id,
         sanBayDi_id=departure_airport_id,
@@ -35,24 +35,68 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
     )
     db.session.add(tuyen_bay)
     db.session.commit()
-    # Tạo đối tượng ChuyenBay (Chuyến bay)
+
+    # Tạo đối tượng Chuyến Bay (ChuyenBay) mới
     chuyen_bay = ChuyenBay(
         maChuyenBay=flight_id,
         thoiGianKhoiHanh=flight_time,
-        thoiGianDen=flight_time+flight_duration,
+        thoiGianDen=flight_time + flight_duration,
         thoiGianBay=flight_duration,
-        soGheHang1=first_class_seats,
-        soGheHang2=second_class_seats,
-        giaTien=price,
         tuyenBay_id=tuyen_bay.id
     )
     db.session.add(chuyen_bay)
     db.session.commit()
 
+    # Tạo các loại vé (TicketType) cho chuyến bay
+    first_class_ticket = TicketType(
+        name="Hạng 1",
+        giaTien=first_class_price,
+        chuyenbay_id=chuyen_bay.id
+    )
+    second_class_ticket = TicketType(
+        name="Hạng 2",
+        giaTien=second_class_price,
+        chuyenbay_id=chuyen_bay.id
+    )
 
-#Code tìm kiêm chuyeens bay
+    db.session.add(first_class_ticket)
+    db.session.add(second_class_ticket)
+    db.session.commit()
+
+    # Thêm ghế hạng 1
+    for i in range(first_class_seats):
+        seat = Seat(
+            seat_number=f"{i + 1}A",  # Số ghế hạng 1 từ 1A, 2A, v.v.
+            status='available',  # Trạng thái ghế là 'available'
+            hang_ghe=HangGhe.HANG_1,  # Ghế hạng 1
+            chuyenbay_id=chuyen_bay.id,  # Liên kết với chuyến bay
+            ticket_type_id=first_class_ticket.id  # Liên kết với loại vé hạng 1
+        )
+        db.session.add(seat)
+
+    # Thêm ghế hạng 2
+    for i in range(second_class_seats):
+        seat = Seat(
+            seat_number=f"{i + 1}B",  # Số ghế hạng 2 từ 1B, 2B, v.v.
+            status='available',  # Trạng thái ghế là 'available'
+            hang_ghe=HangGhe.HANG_2,  # Ghế hạng 2
+            chuyenbay_id=chuyen_bay.id,  # Liên kết với chuyến bay
+            ticket_type_id=second_class_ticket.id  # Liên kết với loại vé hạng 2
+        )
+        db.session.add(seat)
+
+    db.session.commit()  # Lưu tất cả ghế vào cơ sở dữ liệu
+
+
+from sqlalchemy import func
+
 def search_flights(from_location=None, to_location=None, departure_date=None, return_date=None, passengers=None):
-    query = db.session.query(ChuyenBay).join(TuyenBay)
+    query = db.session.query(
+        ChuyenBay,
+        func.min(TicketType.giaTien).label('min_price'),  # Giá vé thấp nhất cho chuyến bay
+        func.max(TicketType.giaTien).label('max_price')   # Giá vé cao nhất (nếu cần)
+    ).join(TuyenBay).join(TicketType)
+
     # Lọc theo sân bay đi
     if from_location:
         query = query.filter(TuyenBay.sanBayDi_id == from_location)
@@ -65,13 +109,31 @@ def search_flights(from_location=None, to_location=None, departure_date=None, re
     # Lọc theo ngày trở về (nếu có)
     if return_date:
         query = query.filter(db.func.date(ChuyenBay.thoiGianDen) <= return_date)
+
     # Lọc theo số lượng hành khách (nếu có)
     if passengers:
-        query = query.filter(
-            (ChuyenBay.soGheHang1 + ChuyenBay.soGheHang2) >= passengers
+        # Đếm số ghế khả dụng theo chuyến bay
+        available_seats = db.session.query(
+            Seat.chuyenbay_id,
+            func.count(Seat.id).label('available_seat_count')
+        ).filter(
+            Seat.status == 'available'  # Lọc ghế còn trống
+        ).group_by(
+            Seat.chuyenbay_id
+        ).subquery()  # Tạo truy vấn phụ
+
+        # Tham chiếu truy vấn phụ trong truy vấn chính
+        query = query.join(
+            available_seats, ChuyenBay.id == available_seats.c.chuyenbay_id
+        ).filter(
+            available_seats.c.available_seat_count >= passengers  # Kiểm tra số ghế đủ yêu cầu
         )
-    # Sắp xếp theo thời gian khởi hành
-    return query.order_by(ChuyenBay.thoiGianKhoiHanh).all()
+
+    # Nhóm theo chuyến bay để tổng hợp giá tiền
+    query = query.group_by(ChuyenBay.id).order_by(ChuyenBay.thoiGianKhoiHanh)
+
+    return query.all()
+
 
 def auth_user(email, password):
     with app.app_context():  # Đảm bảo chạy trong app context

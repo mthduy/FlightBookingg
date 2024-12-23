@@ -20,20 +20,19 @@
         Chuyến bay từ <strong>{{from_locationname}}</strong> đến <strong>{{to_locationname}}</strong> ngày <strong>{{departure_date}}</strong>
     </p>
 
-    {% if results %}
     <ul class="search-results-list">
-        {% for result in results %}
+        {% for flight, min_price, max_price in results %}
         <li class="search-result-item">
-            <p>Mã chuyến bay: <strong>{{ result.maChuyenBay }}</strong></p>
-            <p>Giờ bay: <strong>{{ result.thoiGianBay }}</strong></p>
-            <p>Giá: <strong>{{ result.giaTien }}</strong> VND</p>
-            <a href="{{ url_for('booking', flight_id=result.id) }}" class="search-btn-primary">Đặt vé</a>
+            <p>Mã chuyến bay: <strong>{{ flight.maChuyenBay }}</strong></p>
+            <p>Giờ khởi hành: <strong>{{ flight.thoiGianKhoiHanh }}</strong></p>
+            <p>Giờ gian bay: <strong>{{ flight.thoiGianBay }}</strong></p>
+            <p>Giá: <strong>{{ min_price  }} - {{ max_price   }}</strong> VND</p>
+            <a href="{{ url_for('booking', flight_id=flight.id) }}" class="search-btn-primary">Đặt vé</a>
         </li>
         {% endfor %}
     </ul>
-    {% else %}
-    <p class="search-no-results">Không tìm thấy chuyến bay nào phù hợp. Vui lòng thử lại.</p>
-    {% endif %}
+<!--    <p class="search-no-results">Không tìm thấy chuyến bay nào phù hợp. Vui lòng thử lại.</p>-->
+
 </main>
 
 <footer>

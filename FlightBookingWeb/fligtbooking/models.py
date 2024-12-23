@@ -6,6 +6,10 @@ from sqlalchemy.orm import relationship
 import datetime
 from fligtbooking import db, app
 
+class HangGhe(enum.Enum):
+    HANG_1 = 'Hạng 1'
+    HANG_2 = 'Hạng 2'
+
 
 # Sân bay
 class SanBay(db.Model):
@@ -34,23 +38,56 @@ class TuyenBay(db.Model):
     chuyenBays = relationship("ChuyenBay", backref="tuyenBay_relationship")  # Đổi tên backref
 
 
-# Chuyến bay
 class ChuyenBay(db.Model):
     __tablename__ = 'chuyenbay'  # Khai báo tên bảng cho Chuyến Bay
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # Khóa chính, tự động tăng
     maChuyenBay = Column(String(50), unique=True, nullable=False)  # Mã chuyến bay
     thoiGianKhoiHanh = Column(DateTime, nullable=False)  # Thời gian khởi hành
     thoiGianDen = Column(DateTime, nullable=False)  # Thời gian đến
     thoiGianBay = Column(Time, nullable=False)  # Thời gian bay
-    soGheHang1 = Column(Integer, nullable=False)  # Số ghế hạng 1
-    soGheHang2 = Column(Integer, nullable=False)  # Số ghế hạng 2
-    giaTien = Column(Integer,nullable=False)
+
     # Tham chiếu đến bảng TuyenBay
     tuyenBay_id = Column(Integer, ForeignKey('tuyenbay.id'), nullable=False)
-    # Mối quan hệ
+    # Mối quan hệ với bảng TuyenBay (Tuyến bay)
     tuyenBay = relationship("TuyenBay", foreign_keys=[tuyenBay_id])  # Liên kết với bảng TuyenBay
-    # Reverse relationship with SanBayTrungGian
+    # Mối quan hệ với bảng Seat (Ghế ngồi) - Chuyến bay có nhiều ghế
+    seats = relationship("Seat", back_populates="chuyenBay")  # Liên kết với bảng ghế ngồi
+    # Mối quan hệ với bảng TicketType (Loại vé) - Một chuyến bay có nhiều loại vé
+    ticket_types = relationship("TicketType", back_populates="chuyenBay")  # Liên kết với bảng loại vé
+    # Mối quan hệ với bảng SanBayTrungGian (Sân bay trung gian) - Chuyến bay có thể có nhiều sân bay trung gian
     sanBayTrungGians = relationship("SanBayTrungGian", back_populates="chuyenBay")
+
+
+class TicketType(db.Model):
+    __tablename__ = 'ticket_type'  # Khai báo tên bảng cho loại vé
+    id = Column(Integer, primary_key=True, autoincrement=True)  # Khóa chính, tự động tăng
+    name = Column(String(50), nullable=False)  # Tên loại vé (ví dụ: Hạng 1, Hạng 2)
+    giaTien = Column(Integer, nullable=False)  # Giá vé cho loại vé này
+
+    # Tham chiếu đến bảng ChuyenBay (Chuyến bay)
+    chuyenbay_id = Column(Integer, ForeignKey('chuyenbay.id'), nullable=False)
+    # Mối quan hệ với bảng ChuyenBay (Chuyến bay)
+    chuyenBay = relationship("ChuyenBay", foreign_keys=[chuyenbay_id], back_populates="ticket_types")
+
+
+class Seat(db.Model):
+    __tablename__ = 'seat'  # Khai báo tên bảng cho ghế ngồi
+    id = Column(Integer, primary_key=True, autoincrement=True)  # Khóa chính, tự động tăng
+    seat_number = Column(String(10), nullable=False)  # Số ghế (ví dụ: 1A, 2B, v.v.)
+    status = Column(String(20), nullable=False, default='available')  # Trạng thái của ghế: "available" hoặc "sold"
+
+    # Thêm trường hạng ghế
+    hang_ghe = Column(db.Enum(HangGhe), nullable=False, default=HangGhe.HANG_2)  # Mặc định là hạng 2
+
+    # Tham chiếu đến bảng ChuyenBay (Chuyến bay)
+    chuyenbay_id = Column(Integer, ForeignKey('chuyenbay.id'), nullable=False)
+    # Tham chiếu đến bảng TicketType (Loại vé)
+    ticket_type_id = Column(Integer, ForeignKey('ticket_type.id'), nullable=False)
+
+    # Mối quan hệ với bảng ChuyenBay (Chuyến bay)
+    chuyenBay = relationship("ChuyenBay", foreign_keys=[chuyenbay_id], back_populates="seats")
+    # Mối quan hệ với bảng TicketType (Loại vé)
+    ticketType = relationship("TicketType", foreign_keys=[ticket_type_id])
 
 
 # Sân bay trung gian
