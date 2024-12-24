@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đặt vé - TravelSky</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/javascript/script.js"></script>
 </head>
 <body class="body">
 
@@ -20,7 +21,6 @@
     <p class="booking-summary">
         Chuyến bay: <strong>{{ flight.maChuyenBay }}</strong><br>
         Giờ bay: <strong>{{flight.thoiGianBay}}</strong><br>
-        Giá vé: <strong>{{flight.giaTien}}</strong>
     </p>
 
     <form action="" method="POST" class="booking-form">
@@ -30,8 +30,22 @@
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required>
 
-        <label for="passengers">Số lượng hành khách:</label>
-        <input type="number" id="passengers" name="passengers" min="1" required>
+<!--        <label for="passengers">Số lượng hành khách:</label>-->
+<!--        <input type="number" id="passengers" name="passengers" min="1" required>-->
+
+         <label for="seat_map">Sơ đồ ghế:</label>
+                    <div id="seat_map">
+                    {% for seat in seats %}
+                        <div class="seat {{ seat.status }}" id="seat_{{ seat.seat_number }}" data-number="{{ seat.seat_number }}"
+                            data-hang="{{ seat.hang_ghe }}" data-ticket-price="{{ seat.ticketType.giaTien }}">
+                            <input type="radio" name="selected_seat" value="{{ seat.seat_number }}" id="radio_{{ seat.seat_number }}" required>
+                            <label for="radio_{{ seat.seat_number }}">{{ seat.seat_number }} ({{ seat.hang_ghe }})</label>
+                        </div>
+                    {% endfor %}
+                    </div>
+           <label for="price">Giá tiền:</label>
+            <input type="text" id="price" name="price" readonly>
+
 
         <button type="submit" class="booking-btn">Đặt vé</button>
     </form>

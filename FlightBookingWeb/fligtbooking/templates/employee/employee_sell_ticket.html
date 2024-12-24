@@ -6,7 +6,7 @@
     <title>Bán vé - TravelSky</title>
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/employeestyles.css">
-    <script src="/static/javascript/script.js" ></script>
+    <script src="/static/javascript/script.js"></script>
 </head>
 <body>
 
@@ -31,8 +31,10 @@
         <form method="POST" action="/employee_sell_ticket">
             <label for="flight">Chọn chuyến bay:</label>
             <select id="flight" name="flight" required>
+                 <option value="" disabled selected>Chọn chuyến bay</option>
                 {% for flight in flights %}
-                <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>
+<!--                <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>-->
+                 <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>
                 {% endfor %}
             </select>
 
@@ -48,9 +50,9 @@
              <label for="seat_map">Sơ đồ ghế:</label>
             <div id="seat_map">
             {% for seat in seats %}
-                <div class="seat {{ seat.status }}" data-number="{{ seat.seat_number }}" data-hang="{{ seat.hang_ghe }}" data-ticket-price="{{ seat.ticketType.giaTien }}">
-                    {{ seat.seat_number }} ({{ seat.hang_ghe }})
-                </div>
+<!--                <div class="seat {{ seat.status }}" data-number="{{ seat.seat_number }}" data-hang="{{ seat.hang_ghe }}" data-ticket-price="{{ seat.ticketType.giaTien }}">-->
+<!--                    {{ seat.seat_number }} ({{ seat.hang_ghe }})-->
+<!--                </div>-->
             {% endfor %}
              </div>
 

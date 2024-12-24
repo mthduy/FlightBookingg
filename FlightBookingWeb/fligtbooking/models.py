@@ -10,6 +10,9 @@ class HangGhe(enum.Enum):
     HANG_1 = 'Hạng 1'
     HANG_2 = 'Hạng 2'
 
+    def __str__(self):
+        return self.value
+
 
 # Sân bay
 class SanBay(db.Model):
@@ -75,20 +78,20 @@ class Seat(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)  # Khóa chính, tự động tăng
     seat_number = Column(String(10), nullable=False)  # Số ghế (ví dụ: 1A, 2B, v.v.)
     status = Column(String(20), nullable=False, default='available')  # Trạng thái của ghế: "available" hoặc "sold"
-
-    # Thêm trường hạng ghế
     hang_ghe = Column(db.Enum(HangGhe), nullable=False, default=HangGhe.HANG_2)  # Mặc định là hạng 2
 
     # Tham chiếu đến bảng ChuyenBay (Chuyến bay)
     chuyenbay_id = Column(Integer, ForeignKey('chuyenbay.id'), nullable=False)
     # Tham chiếu đến bảng TicketType (Loại vé)
     ticket_type_id = Column(Integer, ForeignKey('ticket_type.id'), nullable=False)
-
     # Mối quan hệ với bảng ChuyenBay (Chuyến bay)
     chuyenBay = relationship("ChuyenBay", foreign_keys=[chuyenbay_id], back_populates="seats")
     # Mối quan hệ với bảng TicketType (Loại vé)
     ticketType = relationship("TicketType", foreign_keys=[ticket_type_id])
-
+    #Lấy maChuyenBay trong ChuyenBay
+    @property
+    def maChuyenBay(self):
+        return self.chuyenBay.maChuyenBay
 
 # Sân bay trung gian
 class SanBayTrungGian(db.Model):

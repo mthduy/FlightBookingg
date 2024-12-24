@@ -44,13 +44,13 @@
     <div class="payment-container">
         <div class="payment-summary">
             <p><strong>Chuyến bay:</strong> {{flight.maChuyenBay}}</p>
-            <p><strong>Số lượng:</strong> {{passengers}} Ghế</p>
-            <p><strong>Giá:</strong> {{flight.giaTien}} VNĐ</p>
-            <p><strong>Tổng tiền:</strong> {{totalPrice}} VNĐ</p>
+            <p><strong>Số ghế:</strong> {{selected_seat}}</p>
+            <p><strong>Giá:</strong> {{price}} VNĐ</p>
+            <p><strong>Tổng tiền:</strong> {{price}} VNĐ</p>
         </div>
         <!-- ZaloPay Payment Button -->
        <form action="/order/{{ flight.id }}" method="post">
-            <input type="hidden" name="totalPrice" value="{{ totalPrice }}">
+            <input type="hidden" name="price" value="{{ price }}">
             <button type="submit" class="btn-zalopay">Thanh Toán qua ZaloPay</button>
         </form>
     </div>

@@ -265,14 +265,15 @@ def get_ticket_price_by_seat_number(seat_number):
         # Lấy thông tin loại vé (TicketType) từ ghế
         ticket_type = seat.ticketType
         if ticket_type:
-            # Trả về giá vé và seat_number
-            return ticket_type.giaTien, seat.seat_number
+            # Trả về giá vé
+            return ticket_type.giaTien
         else:
-            return None, "Không tìm thấy loại vé cho ghế này"
+            return None  # Trả về None nếu không tìm thấy loại vé
     else:
-        return None, "Không tìm thấy ghế này"
+        return None  # Trả về None nếu không tìm thấy ghế
 
-def get_seats_by_flight(flight_id):
-    # Lấy tất cả ghế từ chuyến bay dựa trên flight_id
-    return Seat.query.filter_by(chuyenbay_id=flight_id).all()
+def get_seats_by_maChuyenBay(maChuyenBay):
+    # Lấy tất cả các ghế ngồi của chuyến bay có maChuyenBay
+    return db.session.query(Seat).join(ChuyenBay).filter(ChuyenBay.maChuyenBay == maChuyenBay).all()
+
 

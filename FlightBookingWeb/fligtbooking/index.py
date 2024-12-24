@@ -50,42 +50,54 @@ def search():
     # Nếu là GET request, chỉ hiển thị trang tìm kiếm
     return render_template('search.html', airports=airports)
 
+
 @app.route('/booking/<flight_id>', methods=['GET', 'POST'])
 def booking(flight_id):
-
+    # Get flight details based on the flight_id
     flight = dao.get_flight(flight_id)
 
+    seats = []
+    if flight:
+        # Get all seats for the specific flight (by flight code)
+        seats = dao.get_seats_by_maChuyenBay(flight.maChuyenBay)
+
     if request.method == 'POST':
-        # Xử lý dữ liệu khi người dùng gửi form (lấy thông tin từ form)
+        # Get form data: passenger's name, email, and selected seat
         name = request.form['name']
         email = request.form['email']
-        passengers = int(request.form['passengers'])
-        totalPrice = flight.giaTien*passengers
+        selected_seat = request.form['selected_seat']
 
-        # Giả lập việc lưu thông tin đặt vé hoặc gửi email xác nhận
-        return render_template('payment.html', flight=flight,passengers=passengers,totalPrice=totalPrice)
+        # Find the price for the selected seat
+        price = dao.get_ticket_price_by_seat_number(selected_seat)
 
-    # Hiển thị trang đặt vé
-    return render_template('booking.html',flight=flight)
+        if price is not None:
+            # You can then proceed with ticket creation or other processes like payment
+            return render_template('payment.html', flight=flight, name=name, email=email, selected_seat=selected_seat, price=price)
+
+        #hiện lỗi
+        err_msg = "Ghế bạn chọn không hợp lệ hoặc đã được bán."
+        return render_template('booking.html', flight=flight, seats=seats, err_msg=err_msg)
+
+    # Render booking page for GET request
+    return render_template('booking.html', flight=flight, seats=seats)
+
 
 @app.route('/payment/<flight_id>', methods=['POST', 'GET'])
 def payment(flight_id):
-    # Nếu là POST, lấy totalPrice từ form và chuyển hướng đến trang "order"
-    if request.method == 'POST':
-        totalPrice = request.form['totalPrice']  # Lấy totalPrice từ form
-        return render_template('order.html', totalPrice=totalPrice)
+        price = request.form['price']  # Lấy totalPrice từ form
+        return render_template('order.html', price=price)
 
 
 @app.route("/order/<flight_id>", methods=["POST"])
 def order(flight_id):
     # Lấy totalPrice từ form
-    totalPrice = request.form.get('totalPrice')
+    price = request.form.get('price')
     redirect_url = "http://127.0.0.1:5000/callback"
-    if not totalPrice:
+    if not price:
         return "Dữ liệu không hợp lệ!", 400  # Nếu không nhận được totalPrice
     # Chuyển tiếp đến ZaloPay để thanh toán
     zalopay_dao = dao.ZaloPayDAO()
-    pay_url = zalopay_dao.create_order(totalPrice, redirect_url)
+    pay_url = zalopay_dao.create_order(price, redirect_url)
     if "Error" not in pay_url:
         # Nếu không có lỗi, chuyển hướng đến trang thanh toán ZaloPay
         return redirect(pay_url)
@@ -205,17 +217,13 @@ def employee_sell_ticket():
 
         # Hiển thị danh sách chuyến bay
     flights = dao.get_all_flights()
-    # Hiển thị sơ đồ ghế cho chuyến bay đầu tiên nếu có
-    seats = []
-    if flights:
-        seats = dao.get_seats_by_flight(flights[0].id)
     return render_template('employee/employee_sell_ticket.html', flights=flights, seats=seats,err_msg=request.args.get('err_msg'))
 
 
 @app.route('/api/seats')
 def get_seats():
-    flight_id = request.args.get('flight_id')  # Lấy ID chuyến bay từ query parameter
-    seats = dao.get_seats_by_flight(flight_id)  # Lấy danh sách ghế của chuyến bay
+    maChuyenBay = request.args.get('maChuyenBay')  # Lấy ID chuyến bay từ query parameter
+    seats = dao.get_seats_by_maChuyenBay(maChuyenBay)  # Lấy danh sách ghế của chuyến bay
 
     # Chuyển đổi dữ liệu thành dạng JSON để gửi về frontend
     seat_data = [

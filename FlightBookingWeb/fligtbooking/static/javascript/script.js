@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Lắng nghe sự kiện thay đổi chuyến bay
     flightSelect.addEventListener('change', function () {
-        const flightId = flightSelect.value; // Lấy ID chuyến bay đã chọn
+        const maChuyenBay = flightSelect.value; // Lấy ID chuyến bay đã chọn
 
         // Gửi yêu cầu AJAX (API call) tới Flask để lấy danh sách ghế
-        fetch(`/api/seats?flight_id=${flightId}`)
+        fetch(`/api/seats?maChuyenBay=${maChuyenBay}`)
             .then(response => response.json())  // Chuyển dữ liệu JSON từ API về
             .then(data => {
                 // Xóa sơ đồ ghế cũ
