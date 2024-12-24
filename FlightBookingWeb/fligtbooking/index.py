@@ -2,7 +2,7 @@ import hashlib
 import hmac
 from datetime import datetime, timedelta
 
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_login import logout_user, login_user, current_user
 
 import dao
@@ -180,9 +180,54 @@ def logout():
 def employee():
     return render_template('employee/employee.html')
 
-@app.route('/employee_sell_ticket')
+@app.route('/employee_sell_ticket', methods=['GET', 'POST'])
 def employee_sell_ticket():
-    return render_template('employee/employee_sell_ticket.html')
+    err_msg = None
+    seats = dao.get_all_seats()
+    if request.method == 'POST':
+        # Lấy dữ liệu từ form
+        ma_chuyen_bay = request.form.get('flight')
+        name = request.form.get('name')
+        soCMND = request.form.get('id_card')
+        soDienThoai = request.form.get('phone')
+        price = int(request.form.get('price'))
+        selected_seat = request.form.get('seat_selected')  # Lấy ghế đã chọn từ form
+
+        try:
+            # Tạo vé
+            ticket = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, price, selected_seat)
+            dao.update_seat_status(selected_seat, 'sold')
+            return render_template('employee/employee_sell_ticket_result.html', ticket=ticket)
+        except Exception as e:
+            print(f"Error creating ticket: {e}")
+            err_msg = "Lỗi không thể in vé"
+            return redirect(url_for('employee_sell_ticket', err_msg=err_msg))
+
+        # Hiển thị danh sách chuyến bay
+    flights = dao.get_all_flights()
+    # Hiển thị sơ đồ ghế cho chuyến bay đầu tiên nếu có
+    seats = []
+    if flights:
+        seats = dao.get_seats_by_flight(flights[0].id)
+    return render_template('employee/employee_sell_ticket.html', flights=flights, seats=seats,err_msg=request.args.get('err_msg'))
+
+
+@app.route('/api/seats')
+def get_seats():
+    flight_id = request.args.get('flight_id')  # Lấy ID chuyến bay từ query parameter
+    seats = dao.get_seats_by_flight(flight_id)  # Lấy danh sách ghế của chuyến bay
+
+    # Chuyển đổi dữ liệu thành dạng JSON để gửi về frontend
+    seat_data = [
+        {
+            'seat_number': seat.seat_number,
+            'status': seat.status,
+            'price': seat.ticketType.giaTien  # Lấy giá vé từ loại ghế
+        }
+        for seat in seats
+    ]
+    return jsonify(seat_data)
+
 
 @app.route('/employee_flight_search')
 def employee_flight_search():
@@ -195,7 +240,7 @@ def employee_schedule_flight():
     airports = dao.get_all_airports()
 
     if not airports:
-        return render_template('employee_schedule_flight.html', airports=airports,
+        return render_template('employee/employee_schedule_flight.html', airports=airports,
                                message="Không có sân bay nào trong hệ thống!")
     # Nếu phương thức là POST, xử lý dữ liệu từ form
     if request.method == 'POST':

@@ -2,9 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả bán vé</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
-
+    <div class="result_content">
+        <h2>Kết quả bán vé</h2>
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Mã vé</th>
+                    <th>Chuyến bay</th>
+                    <th>Thời gian khởi hành</th>
+                    <th>Sân bay đi</th>
+                    <th>Sân bay đến</th>
+                    <th>Hành khách</th>
+                    <th>Giá</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ ticket.veMayBay_id }}</td>
+                    <td>{{ ticket.chuyenBay.maChuyenBay }}</td>
+                    <td>{{ ticket.chuyenBay.thoiGianKhoiHanh }}</td>
+                    <td>{{ ticket.chuyenBay.tuyenBay.sanBayDi.tenSanBay }}</td>
+                    <td>{{ ticket.chuyenBay.tuyenBay.sanBayDen.tenSanBay }}</td>
+                    <td>{{ ticket.hanhKhach.tenHanhKhach }}</td>
+                    <td>{{ ticket.giaVe }} VND</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

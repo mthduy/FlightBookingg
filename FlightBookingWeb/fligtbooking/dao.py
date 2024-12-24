@@ -1,7 +1,7 @@
 import hashlib
 import json
 
-from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType
+from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType, HanhKhach, VeMayBay
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -211,3 +211,68 @@ class ZaloPayDAO:
             return f"Error in request to ZaloPay API: {str(e)}"
         except ValueError:
             return "Error: Invalid JSON response from ZaloPay"
+
+def get_all_flights():
+    return ChuyenBay.query.all()
+
+def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, price, selected_seat):
+    # Tìm chuyến bay theo mã
+    chuyen_bay = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
+    if not chuyen_bay:
+        raise ValueError("Chuyến bay không tồn tại")
+
+    # Tạo hành khách mới
+    hanh_khach = HanhKhach(tenHanhKhach=tenHanhKhach, soCMND=soCMND, soDienThoai=soDienThoai)
+    db.session.add(hanh_khach)
+    db.session.flush()  # Lấy ID của hành khách vừa thêm
+
+    # Tạo vé máy bay
+    ticket = VeMayBay(
+        veMayBay_id=f"MB{hanh_khach.id:06d}",  # Sinh mã vé dựa trên ID hành khách
+        hanhKhach_id=hanh_khach.id,
+        chuyenBay_id=chuyen_bay.id,
+        giaVe=price,
+        seat_number=selected_seat
+    )
+    db.session.add(ticket)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Lỗi khi commit: {e}")
+        raise ValueError("Không thể lưu thông tin vé.")
+
+    return ticket
+
+
+def update_seat_status(seat_number, status):
+    seat = Seat.query.filter_by(seat_number=seat_number).first()
+    if seat:
+        seat.status = status
+        db.session.commit()
+
+def get_all_seats():
+    return Seat.query.all()
+
+
+# Hàm lấy thông tin ghế và giá vé
+def get_ticket_price_by_seat_number(seat_number):
+    # Lấy ghế từ CSDL dựa trên seat_number
+    seat = db.session.query(Seat).filter(Seat.seat_number == seat_number).first()
+
+    if seat:
+        # Lấy thông tin loại vé (TicketType) từ ghế
+        ticket_type = seat.ticketType
+        if ticket_type:
+            # Trả về giá vé và seat_number
+            return ticket_type.giaTien, seat.seat_number
+        else:
+            return None, "Không tìm thấy loại vé cho ghế này"
+    else:
+        return None, "Không tìm thấy ghế này"
+
+def get_seats_by_flight(flight_id):
+    # Lấy tất cả ghế từ chuyến bay dựa trên flight_id
+    return Seat.query.filter_by(chuyenbay_id=flight_id).all()
+

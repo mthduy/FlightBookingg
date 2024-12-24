@@ -1,7 +1,7 @@
 import enum
 
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Time, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Time, Boolean, event, update
 from sqlalchemy.orm import relationship
 import datetime
 from fligtbooking import db, app
@@ -113,6 +113,7 @@ class VeMayBay(db.Model):
     hanhKhach_id = Column(Integer, ForeignKey('hanhkhach.id'), nullable=False)  # Khóa ngoại đến bảng HanhKhach
     chuyenBay_id = Column(Integer, ForeignKey('chuyenbay.id'), nullable=False)  # Khóa ngoại đến bảng ChuyenBay
     giaVe = Column(Integer, nullable=False)
+    seat_number = Column(String(50), nullable=False)
 
     # Mối quan hệ với bảng HanhKhach
     hanhKhach = relationship('HanhKhach', backref='veMayBays')
@@ -124,10 +125,27 @@ class VeMayBay(db.Model):
 class HanhKhach(db.Model):
     __tablename__ = 'hanhkhach'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    hanhKhach_id = Column(String(50), nullable=False)
+    hanhKhach_id = Column(String(50), nullable=False,unique=True)
     tenHanhKhach = Column(String(50), nullable=False)
     soCMND = Column(Integer, nullable=False)
     soDienThoai = Column(Integer, nullable=False)
+
+    @staticmethod
+    def generate_hanhKhach_id(tenHanhKhach, id):
+        return tenHanhKhach[:3].upper() + str(id)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.hanhKhach_id:
+            self.hanhKhach_id = "TEMP"  # Giá trị tạm thời
+
+@event.listens_for(HanhKhach, 'after_insert')
+def after_insert_listener(mapper, connection, target):
+    # Tạo giá trị hanhKhach_id
+    hanhKhach_id = HanhKhach.generate_hanhKhach_id(target.tenHanhKhach, target.id)
+    # Sử dụng SQLAlchemy để cập nhật giá trị
+    stmt = update(HanhKhach).where(HanhKhach.id == target.id).values(hanhKhach_id=hanhKhach_id)
+    connection.execute(stmt)
 
 
 class Role(enum.Enum):
