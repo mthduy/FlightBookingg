@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thay đổi quy định - TravelSky</title>
     <link rel="stylesheet" href="/static/css/adminstyles.css">
+    <script src="/static/javascript/script.js"></script>
 </head>
 <body>
     <header class="navbar">
@@ -17,7 +18,7 @@
     <main class="admin-regulations-main-container">
         <h1>Thay đổi quy định</h1>
 
-        <form class="regulations-form">
+        <form class="regulations-form" method="POST">
             <!-- Quy định về sân bay -->
             <fieldset>
                 <legend>Quy định về sân bay</legend>
@@ -37,11 +38,18 @@
                 <input type="number" id="max-stop-time" name="max-stop-time" min="0" placeholder="Nhập thời gian dừng tối đa tại sân bay trung gian" required>
             </fieldset>
 
-            <!-- Quy định về vé -->
+            <fieldset>
+                <legend>Quy định về đặt và bán vé</legend>
+                <label for="customer-booking-time">Khách hàng chỉ được đặt trước (giờ):</label>
+                <input type="number" id="customer-booking-time" name="customer-booking-time" value="{{ regulation.customer_booking_time }}" min="0" required>
+
+                <label for="employee-sale-time">Nhân viên chỉ bán trước (giờ):</label>
+                <input type="number" id="employee-sale-time" name="employee-sale-time" value="{{ regulation.employee_sale_time }}" min="0" required>
+            </fieldset>
             <fieldset>
                 <legend>Quy định về vé</legend>
                 <label for="ticket-class-count">Số lượng hạng vé:</label>
-                <input type="number" id="ticket-class-count" name="ticket-class-count" min="1" max="5" placeholder="Nhập số lượng hạng vé" required>
+                <input type="number" id="ticket-class-count" name="ticket-class-count" min="1" max="5" placeholder="Nhập số lượng hạng vé" required onchange="generateTicketClasses()">
 
                 <label>Bảng đơn giá vé:</label>
                 <table id="ticket-price-table">
@@ -51,19 +59,8 @@
                             <th>Đơn giá (VND)</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" name="class-1" placeholder="Ví dụ: Hạng 1" required></td>
-                            <td><input type="number" name="price-1" placeholder="Nhập đơn giá" required></td>
-                        </tr>
-                        <tr>
-                            <td><input type="text" name="class-2" placeholder="Ví dụ: Hạng 2" required></td>
-                            <td><input type="number" name="price-2" placeholder="Nhập đơn giá" required></td>
-                        </tr>
-                        <tr>
-                            <td><input type="text" name="class-3" placeholder="Ví dụ: Hạng 3" required></td>
-                            <td><input type="number" name="price-3" placeholder="Nhập đơn giá" required></td>
-                        </tr>
+                    <tbody id="ticket-classes-body">
+                        <!-- Các dòng hạng vé sẽ được tạo động ở đây -->
                     </tbody>
                 </table>
             </fieldset>

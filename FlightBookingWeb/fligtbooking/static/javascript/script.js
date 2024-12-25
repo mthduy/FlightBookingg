@@ -64,3 +64,17 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => console.error('Error loading seat map:', error));  // Xử lý lỗi nếu có
     });
 });
+function generateTicketClasses() {
+        const count = document.getElementById('ticket-class-count').value;
+        const tbody = document.getElementById('ticket-classes-body');
+        tbody.innerHTML = ''; // Xóa các dòng cũ
+
+        for (let i = 1; i <= count; i++) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" name="class-${i}" value=" ${i}" readonly></td>
+                <td><input type="number" name="price-${i}" placeholder="Nhập đơn giá" required></td>
+            `;
+            tbody.appendChild(row);
+        }
+    }

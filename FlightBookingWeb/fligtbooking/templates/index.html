@@ -12,12 +12,6 @@
     <a href="/" class="logo">TravelSky</a>
     <div class="container">
         <nav class="menu">
-            {% if session.get('role') == 'employee' %}
-            <a href="/employee" class="btn-secondary">Nhân viên</a>
-            {% endif %}
-            {% if session.get('role') == 'admin' %}
-            <a href="/admin" class="btn-secondary">Quản trị viên</a>
-            {% endif %}
             {%if current_user.is_authenticated%}
                 <h3>Chao {{current_user.name}}</h3>
                 <a href="/logout" class="btn-secondary">Đăng xuất</a>
@@ -25,6 +19,7 @@
                 <a href="/login" class="btn-secondary">Đăng nhập</a>
                 <a href="/register" class="btn-primary">Đăng ký</a>
             {% endif %}
+
         </nav>
     </div>
 </header>

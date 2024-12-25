@@ -1,7 +1,7 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-{%if current_user.is_authenticated%}
+{%if current_user.is_authenticated %}
     <h3>Chao {{current_user.name}}</h3>
 {%else%}
 <h1>TRANG QUẢN TRỊ</h1>

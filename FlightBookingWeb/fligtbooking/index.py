@@ -15,6 +15,10 @@ from fligtbooking.models import Role
 
 @app.route("/")
 def home():
+    if current_user.is_authenticated and current_user.role==Role.EMPLOYEE:
+        return redirect("/employee")
+    elif current_user.is_authenticated and current_user.role==Role.ADMIN:
+        return redirect("/logout")
     return render_template('index.html')  # Hiển thị trang chủ
 
 # Trang Đặt vé
@@ -123,15 +127,16 @@ def booking_results():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and current_user.role==Role.CUSTOMER:
         return redirect("/")
+    elif current_user.is_authenticated and current_user.role==Role.EMPLOYEE:
+        return redirect("/employee")
     err_msg = None
     if request.method.__eq__('POST'):
         email = request.form['email']
         password = request.form.get('password')
         role = request.form.get('role')  # Sử dụng .get() để lấy giá trị từ dropdown
         user = dao.auth_user(email=email, password=password)
-        print(user.name + " " + str(user.role))
         if user and role=='customer' and user.role==Role.CUSTOMER:
             login_user(user)
             next_page = request.args.get("next", "/")  # Nếu không có tham số next, chuyển đến trang chủ

@@ -20,16 +20,15 @@
             <select id="role" name="role" class="select-login" required>
                 <option value="customer">Khách hàng</option>
                 <option value="employee">Nhân viên</option>
-                <option value="admin">Người quản trị</option>
             </select>
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required placeholder="Nhập email của bạn">
 
             <label for="password">Mật khẩu:</label>
             <input type="password" id="password" name="password" required placeholder="Nhập mật khẩu của bạn">
-          <!-- Dropdown chọn vai trò -->
-
-
+            {%if err_msg%}
+            <div class="alert alert-danger">{{err_msg}}</div>
+            {%endif%}
             <button type="submit" class="btn-primary">Đăng nhập</button>
 
             <p>Bạn chưa có tài khoản? <a href="/register">Đăng ký ngay</a></p>
