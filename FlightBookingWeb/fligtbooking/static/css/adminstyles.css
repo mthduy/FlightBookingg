@@ -720,3 +720,26 @@ table td button:hover {
     color: #fff;
     transform: scale(1.05);
 }
+
+.flash-message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.flash-message.success {
+    background-color: green;
+    color: white;
+}
+
+.flash-message.error {
+    background-color: red;
+    color: white;
+}
+
+.flash-message.info {
+    background-color: blue;
+    color: white;
+}
+

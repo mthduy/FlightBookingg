@@ -1,6 +1,6 @@
 import json
 
-from flask import redirect, request
+from flask import redirect, request, flash
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
@@ -19,7 +19,6 @@ class MyBaseView(BaseView):
 class AdminChangeRegulationsView(MyBaseView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
-
         regulation = Regulation.query.first()
         if request.method == 'POST':
             # Lấy dữ liệu từ form
@@ -55,8 +54,9 @@ class AdminChangeRegulationsView(MyBaseView):
                 regulation.ticket_sale_time = ticket_sale_time
                 regulation.ticket_booking_time = ticket_booking_time
                 db.session.commit()
+                flash("Cập nhật thành công", "success")
             else:
-                pass
+                flash("Cập nhật quy định thất bại", "error")
 
             return redirect('/admin/admin_change_regulations')
 
