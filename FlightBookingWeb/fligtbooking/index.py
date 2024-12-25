@@ -9,7 +9,7 @@ import dao
 from select import select
 
 from fligtbooking import app,admin,login_manager
-from fligtbooking.dao import SanBayNameDAO, search_flights
+from fligtbooking.dao import SanBayNameDAO, customter_search_flights
 from fligtbooking.models import Role
 
 
@@ -34,7 +34,7 @@ def search():
         return_date = request.form.get('return_date')  # get() để tránh lỗi khi không có giá trị
         passengers = request.form['passengers']
 
-        results = search_flights( from_location = from_location,
+        results = customter_search_flights( from_location = from_location,
                                   to_location = to_location,
                                   departure_date = departure_date,
                                   return_date = return_date,
@@ -58,7 +58,6 @@ def booking(flight_id):
 
     seats = []
     if flight:
-        # Get all seats for the specific flight (by flight code)
         seats = dao.get_seats_by_maChuyenBay(flight.maChuyenBay)
 
     if request.method == 'POST':
@@ -237,9 +236,25 @@ def get_seats():
     return jsonify(seat_data)
 
 
-@app.route('/employee_flight_search')
+@app.route('/employee_flight_search',methods=['GET','POST'])
 def employee_flight_search():
-    return render_template('employee/employee_flight_search.html')
+        if request.method == 'POST':
+            maChuyenBay = request.form.get("maChuyenBay")
+            flight = dao.employee_search_flights_by_maChuyenBay(maChuyenBay)
+            airport = dao.get_TuyenBay_by_maChuyenBay(maChuyenBay)
+            seats = dao.count_available_seats(maChuyenBay)
+
+            sanbaydi_name = SanBayNameDAO.get_airport_name_by_id(airport.sanBayDi_id)
+            sanbayden_name = SanBayNameDAO.get_airport_name_by_id(airport.sanBayDen_id)
+
+            return render_template('employee/employee_flight_search_result.html',flight=flight,sanbaydi_name=sanbaydi_name,sanbayden_name=sanbayden_name,seats=seats)
+
+        return render_template('employee/employee_flight_search.html')
+
+
+# @app.route('/employee_flight_search_result')
+# def employee_flight_search_result():
+#     return render_template('employee/employee_flight_search_result.html')
 
 
 @app.route('/employee_schedule_flight', methods=['GET', 'POST'])

@@ -90,7 +90,7 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
 
 from sqlalchemy import func
 
-def search_flights(from_location=None, to_location=None, departure_date=None, return_date=None, passengers=None):
+def customter_search_flights(from_location=None, to_location=None, departure_date=None, return_date=None, passengers=None):
     query = db.session.query(
         ChuyenBay,
         func.min(TicketType.giaTien).label('min_price'),  # Giá vé thấp nhất cho chuyến bay
@@ -132,6 +132,13 @@ def search_flights(from_location=None, to_location=None, departure_date=None, re
     # Nhóm theo chuyến bay để tổng hợp giá tiền
     query = query.group_by(ChuyenBay.id).order_by(ChuyenBay.thoiGianKhoiHanh)
 
+    return query.all()
+
+
+def employee_search_flights_by_maChuyenBay(maChuyenBay):
+    query = db.session.query(ChuyenBay)
+    if maChuyenBay:
+        query = query.filter(ChuyenBay.maChuyenBay == maChuyenBay)
     return query.all()
 
 
@@ -277,3 +284,13 @@ def get_seats_by_maChuyenBay(maChuyenBay):
     return db.session.query(Seat).join(ChuyenBay).filter(ChuyenBay.maChuyenBay == maChuyenBay).all()
 
 
+def count_available_seats(maChuyenBay):
+    return db.session.query(Seat).join(ChuyenBay).filter(
+        ChuyenBay.maChuyenBay == maChuyenBay,
+        Seat.status == 'available'
+    ).count()
+
+
+
+def get_TuyenBay_by_maChuyenBay(maChuyenBay):
+    return db.session.query(TuyenBay).filter(ChuyenBay.maChuyenBay == maChuyenBay).first()
