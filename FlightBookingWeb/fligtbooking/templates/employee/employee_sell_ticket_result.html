@@ -17,7 +17,11 @@
                     <th>Thời gian khởi hành</th>
                     <th>Sân bay đi</th>
                     <th>Sân bay đến</th>
+                    <th>Số ghế</th>
+                    <th>Hạng ghế</th>
                     <th>Hành khách</th>
+                    <th>Số điện thoại</th>
+                    <th>CMND</th>
                     <th>Giá</th>
                 </tr>
             </thead>
@@ -28,11 +32,18 @@
                     <td>{{ ticket.chuyenBay.thoiGianKhoiHanh }}</td>
                     <td>{{ ticket.chuyenBay.tuyenBay.sanBayDi.tenSanBay }}</td>
                     <td>{{ ticket.chuyenBay.tuyenBay.sanBayDen.tenSanBay }}</td>
+                    <td>{{ ticket.seat_number }}</td>
+                    <td>{{ ghe.hang_ghe }}</td>
                     <td>{{ ticket.hanhKhach.tenHanhKhach }}</td>
+                    <td>{{ ticket.hanhKhach.soDienThoai }}</td>
+                    <td>{{ ticket.hanhKhach.soCMND }}</td>
                     <td>{{ ticket.giaVe }} VND</td>
                 </tr>
             </tbody>
         </table>
+        <a href="/employee" class="back-button">
+            <button>Quay lại</button>
+        </a>
     </div>
 </body>
 </html>

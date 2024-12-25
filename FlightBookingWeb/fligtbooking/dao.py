@@ -1,7 +1,8 @@
 import hashlib
 import json
 
-from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType, HanhKhach, VeMayBay
+from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType, HanhKhach, VeMayBay, \
+    Regulation
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -228,10 +229,14 @@ def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, price, selec
     if not chuyen_bay:
         raise ValueError("Chuyến bay không tồn tại")
 
-    # Tạo hành khách mới
-    hanh_khach = HanhKhach(tenHanhKhach=tenHanhKhach, soCMND=soCMND, soDienThoai=soDienThoai)
-    db.session.add(hanh_khach)
-    db.session.flush()  # Lấy ID của hành khách vừa thêm
+    existing_hanh_khach = HanhKhach.query.filter_by(soCMND=soCMND).first()
+    if existing_hanh_khach:
+        hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
+    else:
+        # Tạo hành khách mới
+        hanh_khach = HanhKhach(tenHanhKhach=tenHanhKhach, soCMND=soCMND, soDienThoai=soDienThoai)
+        db.session.add(hanh_khach)
+        db.session.flush()  # Lấy ID của hành khách vừa thêm
 
     # Tạo vé máy bay
     ticket = VeMayBay(
@@ -252,12 +257,19 @@ def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, price, selec
 
     return ticket
 
+def get_seat_by_number_maChuyenBay(seat_number,ma_chuyen_bay):
+    return Seat.query.join(ChuyenBay).filter(
+        Seat.seat_number == seat_number,
+        ChuyenBay.maChuyenBay == ma_chuyen_bay
+    ).first()
 
-def update_seat_status(seat_number, status):
-    seat = Seat.query.filter_by(seat_number=seat_number).first()
+
+def update_seat_status(seat_number, status,ma_chuyen_bay):
+    seat = get_seat_by_number_maChuyenBay(seat_number,ma_chuyen_bay)
     if seat:
         seat.status = status
         db.session.commit()
+
 
 def get_all_seats():
     return Seat.query.all()
@@ -294,3 +306,9 @@ def count_available_seats(maChuyenBay):
 
 def get_TuyenBay_by_maChuyenBay(maChuyenBay):
     return db.session.query(TuyenBay).filter(ChuyenBay.maChuyenBay == maChuyenBay).first()
+
+def get_current_regulation():
+    return Regulation.query.first()
+
+def get_chuyenbay_by_maChuyenBay(ma_chuyen_bay):
+    return ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()

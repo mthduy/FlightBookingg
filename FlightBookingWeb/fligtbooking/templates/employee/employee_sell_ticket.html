@@ -33,7 +33,6 @@
             <select id="flight" name="flight" required>
                  <option value="" disabled selected>Chọn chuyến bay</option>
                 {% for flight in flights %}
-<!--                <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>-->
                  <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>
                 {% endfor %}
             </select>
@@ -60,10 +59,11 @@
             <label for="price">Giá tiền:</label>
             <input type="text" id="price" name="price" readonly>
 
-            <button type="submit" class="btn-primary">In vé bán</button>
             {%if err_msg%}
             <div class="alert alert-danger">{{err_msg}}</div>
             {%endif%}
+            <button type="submit" class="btn-primary">In vé bán</button>
+
         </form>
     </div>
 </main>

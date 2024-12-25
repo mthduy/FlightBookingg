@@ -209,20 +209,34 @@ def employee_sell_ticket():
         price = int(request.form.get('price'))
         selected_seat = request.form.get('seat_selected')  # Lấy ghế đã chọn từ form
 
+        regulation = dao.get_current_regulation()
+        employee_sale_time = regulation.employee_sale_time
+        flight = dao.get_chuyenbay_by_maChuyenBay(ma_chuyen_bay)
+        thoiGianKhoiHanh = flight.thoiGianKhoiHanh
+
+        sale_deadline = thoiGianKhoiHanh - timedelta(hours=employee_sale_time)
+        current_time = datetime.now()
+        # Kiểm tra thời gian bán vé
+        if current_time > sale_deadline:
+            err_msg = f"Nhân viên chỉ được phép bán vé trước {employee_sale_time} giờ."
+            return render_template('employee/employee_sell_ticket.html',
+                                   flights=dao.get_all_flights(),
+                                   seats=seats,
+                                   err_msg=err_msg)
+
         try:
             # Tạo vé
             ticket = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, price, selected_seat)
-            dao.update_seat_status(selected_seat, 'sold')
-            return render_template('employee/employee_sell_ticket_result.html', ticket=ticket)
+            dao.update_seat_status(selected_seat, 'sold',ma_chuyen_bay)
+            ghe= dao.get_seat_by_number_maChuyenBay(selected_seat, ma_chuyen_bay)
+            return render_template('employee/employee_sell_ticket_result.html', ticket=ticket,ghe=ghe)
         except Exception as e:
             print(f"Error creating ticket: {e}")
             err_msg = "Lỗi không thể in vé"
-            return redirect(url_for('employee_sell_ticket', err_msg=err_msg))
 
-        # Hiển thị danh sách chuyến bay
+    # Hiển thị danh sách chuyến bay
     flights = dao.get_all_flights()
-    return render_template('employee/employee_sell_ticket.html', flights=flights, seats=seats,err_msg=request.args.get('err_msg'))
-
+    return render_template('employee/employee_sell_ticket.html', flights=flights, seats=seats, err_msg=err_msg)
 
 @app.route('/api/seats')
 def get_seats():
