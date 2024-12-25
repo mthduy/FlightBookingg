@@ -75,16 +75,6 @@
                     </tbody>
                 </table>
             </fieldset>
-
-            <!-- Quy định về bán và đặt vé -->
-            <fieldset>
-                <legend>Quy định về bán và đặt vé</legend>
-                <label for="ticket-sale-time">Thời gian bán vé (ngày):</label>
-                <input type="number" id="ticket-sale-time" name="ticket-sale-time" min="0" placeholder="Nhập thời gian bán vé" value="{{ regulation.ticket_sale_time }}" required>
-
-                <label for="ticket-booking-time">Thời gian đặt vé (ngày):</label>
-                <input type="number" id="ticket-booking-time" name="ticket-booking-time" min="0" placeholder="Nhập thời gian đặt vé" value="{{ regulation.ticket_booking_time }}"required>
-            </fieldset>
             <button type="submit" class="btn-primary">Lưu thay đổi</button>
         </form>
     </main>

@@ -180,39 +180,38 @@ class Regulation(db.Model):
     employee_sale_time = db.Column(db.Integer, nullable=False, default=4)
     ticket_class_count = db.Column(db.Integer, nullable=False, default=2)
     ticket_classes = db.Column(db.String(500),nullable=False, default="[]")
-    ticket_sale_time = db.Column(db.Integer, nullable=False, default=30)
-    ticket_booking_time = db.Column(db.Integer, nullable=False, default=30)
+
 
 # Tạo cơ sở dữ liệu và thêm sân bay mặc định
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
 
-        # Dữ liệu sân bay mặc định
-        danhSachSanBay = [
-            {"maSanBay": "HAN", "tenSanBay": "Sân bay Nội Bài", "viTri": "Hà Nội"},
-            {"maSanBay": "SGN", "tenSanBay": "Sân bay Tân Sơn Nhất", "viTri": "TP.HCM"},
-            {"maSanBay": "DAD", "tenSanBay": "Sân bay Đà Nẵng", "viTri": "Đà Nẵng"},
-            {"maSanBay": "HPH", "tenSanBay": "Sân bay Cát Bi", "viTri": "Hải Phòng"},
-            {"maSanBay": "VCL", "tenSanBay": "Sân bay Chu Lai", "viTri": "Quảng Nam"},
-            {"maSanBay": "PXU", "tenSanBay": "Sân bay Pleiku", "viTri": "Gia Lai"},
-            {"maSanBay": "UIH", "tenSanBay": "Sân bay Phù Cát", "viTri": "Bình Định"},
-            {"maSanBay": "VII", "tenSanBay": "Sân bay Vinh", "viTri": "Nghệ An"},
-            {"maSanBay": "CXR", "tenSanBay": "Sân bay Cam Ranh", "viTri": "Khánh Hòa"},
-            {"maSanBay": "VCS", "tenSanBay": "Sân bay Côn Đảo", "viTri": "Bà Rịa - Vũng Tàu"}
-        ]
-        for sanBay in danhSachSanBay:
-            db.session.add(SanBay(maSanBay=sanBay["maSanBay"], tenSanBay=sanBay["tenSanBay"], viTri=sanBay["viTri"]))
-
-        import hashlib
-
-        password = str(hashlib.md5("123".encode('utf-8')).hexdigest())
-        u = User(name="CUSTOMER", email="customer@gmail.com", password=password)
-        u1 = User(name="EMPLOYEE", email="employee@gmail.com", password=password,role=Role.EMPLOYEE)
-        u2 = User(name="ADMIN", email="admin@gmail.com", password=password, role=Role.ADMIN)
-        db.session.add(u)
-        db.session.add(u1)
-        db.session.add(u2)
+        # # Dữ liệu sân bay mặc định
+        # danhSachSanBay = [
+        #     {"maSanBay": "HAN", "tenSanBay": "Sân bay Nội Bài", "viTri": "Hà Nội"},
+        #     {"maSanBay": "SGN", "tenSanBay": "Sân bay Tân Sơn Nhất", "viTri": "TP.HCM"},
+        #     {"maSanBay": "DAD", "tenSanBay": "Sân bay Đà Nẵng", "viTri": "Đà Nẵng"},
+        #     {"maSanBay": "HPH", "tenSanBay": "Sân bay Cát Bi", "viTri": "Hải Phòng"},
+        #     {"maSanBay": "VCL", "tenSanBay": "Sân bay Chu Lai", "viTri": "Quảng Nam"},
+        #     {"maSanBay": "PXU", "tenSanBay": "Sân bay Pleiku", "viTri": "Gia Lai"},
+        #     {"maSanBay": "UIH", "tenSanBay": "Sân bay Phù Cát", "viTri": "Bình Định"},
+        #     {"maSanBay": "VII", "tenSanBay": "Sân bay Vinh", "viTri": "Nghệ An"},
+        #     {"maSanBay": "CXR", "tenSanBay": "Sân bay Cam Ranh", "viTri": "Khánh Hòa"},
+        #     {"maSanBay": "VCS", "tenSanBay": "Sân bay Côn Đảo", "viTri": "Bà Rịa - Vũng Tàu"}
+        # ]
+        # for sanBay in danhSachSanBay:
+        #     db.session.add(SanBay(maSanBay=sanBay["maSanBay"], tenSanBay=sanBay["tenSanBay"], viTri=sanBay["viTri"]))
+        #
+        # import hashlib
+        #
+        # password = str(hashlib.md5("123".encode('utf-8')).hexdigest())
+        # u = User(name="CUSTOMER", email="customer@gmail.com", password=password)
+        # u1 = User(name="EMPLOYEE", email="employee@gmail.com", password=password,role=Role.EMPLOYEE)
+        # u2 = User(name="ADMIN", email="admin@gmail.com", password=password, role=Role.ADMIN)
+        # db.session.add(u)
+        # db.session.add(u1)
+        # db.session.add(u2)
 
         if Regulation.query.first() is None:
             default_regulation = Regulation()

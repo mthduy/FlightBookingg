@@ -36,8 +36,6 @@ class AdminChangeRegulationsView(MyBaseView):
                 price = int(request.form.get(f'price-{i}'))
                 ticket_classes.append({"class_name": class_name, "price": price})
             ticket_classes_json = json.dumps(ticket_classes)
-            ticket_sale_time = int(request.form.get('ticket-sale-time'))
-            ticket_booking_time = int(request.form.get('ticket-booking-time'))
 
             # Cập nhật hoặc tạo quy định mới
             regulation = Regulation.query.first()
@@ -51,8 +49,6 @@ class AdminChangeRegulationsView(MyBaseView):
                 regulation.employee_sale_time = employee_sale_time
                 regulation.ticket_class_count = ticket_class_count
                 regulation.ticket_classes = ticket_classes_json
-                regulation.ticket_sale_time = ticket_sale_time
-                regulation.ticket_booking_time = ticket_booking_time
                 db.session.commit()
                 flash("Cập nhật thành công", "success")
             else:
