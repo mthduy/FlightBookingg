@@ -28,46 +28,62 @@
 
     <div class="schedule_flight_content">
         <h2>Lập lịch chuyến bay</h2>
-        <form method="POST">
-            <label for="flight_id">Mã chuyến bay:</label>
-            <input type="text" id="flight_id" name="flight_id" required>
+       <form method="POST">
+    <label for="flight_id">Mã chuyến bay:</label>
+    <input type="text" id="flight_id" name="flight_id" required>
 
-            <label for="departure_airport">Sân bay đi:</label>
-            <select id="departure_airport" name="departure_airport" required>
-                <option value="" disabled selected>Chọn sân bay đi</option>
-                {% for airport in airports %}
-                   <option value="{{airport.id}}">{{airport.tenSanBay}} ({{airport.maSanBay}})</option>
-                {% endfor %}
-            </select>
+    <label for="departure_airport">Sân bay đi:</label>
+    <select id="departure_airport" name="departure_airport" required>
+        <option value="" disabled selected>Chọn sân bay đi</option>
+        {% for airport in airports %}
+           <option value="{{ airport.id }}">{{ airport.tenSanBay }} ({{ airport.maSanBay }})</option>
+        {% endfor %}
+    </select>
 
-            <label for="arrival_airport">Sân bay đến:</label>
-            <select id="arrival_airport" name="arrival_airport" required>
-                <option value="" disabled selected>Chọn sân bay đến</option>
-                {% for airport in airports %}
-                    <option value="{{airport.id}}">{{airport.tenSanBay}} ({{airport.maSanBay}})</option>
-                {% endfor %}
-            </select>
+    <label for="arrival_airport">Sân bay đến:</label>
+    <select id="arrival_airport" name="arrival_airport" required>
+        <option value="" disabled selected>Chọn sân bay đến</option>
+        {% for airport in airports %}
+            <option value="{{ airport.id }}">{{ airport.tenSanBay }} ({{ airport.maSanBay }})</option>
+        {% endfor %}
+    </select>
 
-            <label for="flight_time">Ngày – giờ:</label>
-            <input type="datetime-local" id="flight_time" name="flight_time" required>
+ <label>Sân bay trung gian:</label>
+<div id="intermediate_airports_container">
+    <!-- Initially, no intermediate airports will be shown -->
+</div>
 
-            <label for="flight_duration">Thời gian bay:</label>
-            <input type="text" id="flight_duration" name="flight_duration" required>
+<!-- Button to add more intermediate airports -->
+<button type="button" onclick="addIntermediateAirport()">Thêm sân bay trung gian</button>
 
-            <label for="first_class_seats">Số lượng ghế hạng 1:</label>
-            <input type="number" id="first_class_seats" name="first_class_seats" required>
 
-            <label for="first_class_price">Giá tiền cho ghế hạng 1:</label>
-            <input type="number" id="first_class_price" name="first_class_price" required>
 
-            <label for="second_class_seats">Số lượng ghế hạng 2:</label>
-            <input type="number" id="second_class_seats" name="second_class_seats" required>
 
-             <label for="second_class_price">Giá tiền cho ghế hạng 2:</label>
-            <input type="number" id="second_class_price" name="second_class_price" required>
+    <label for="flight_time">Ngày – giờ:</label>
+    <input type="datetime-local" id="flight_time" name="flight_time" required>
 
-            <button type="submit" class="btn-primary">Lập lịch chuyến bay</button>
-        </form>
+    <label for="flight_duration">Thời gian bay (hh:mm):</label>
+    <input type="text" id="flight_duration" name="flight_duration" required>
+
+    <!-- Tự động hiển thị các loại ghế và giá tiền -->
+   {% for ticket_class in ticket_classes %}
+        <label for="class_{{ ticket_class.index }}_seats">Số lượng ghế {{ ticket_class.class_name }} TEST:id="class_{{ ticket_class.index }}_seats"
+               name="class_{{ ticket_class.index }}_seats":</label>
+        <input type="number" id="class_{{ ticket_class.index }}_seats"
+               name="class_{{ ticket_class.index }}_seats"
+               required>
+
+        <label for="class_{{ ticket_class.index }}_price">Giá tiền cho {{ ticket_class.class_name }}TEST:id="class_{{ ticket_class.index }}_seats":</label>
+        <input type="number" id="class_{{ ticket_class.index }}_price"
+               name="class_{{ ticket_class.index }}_price"
+               value="{{ ticket_class.price }}"
+               required readonly>
+    {% endfor %}
+
+
+    <button type="submit" class="btn-primary">Lập lịch chuyến bay</button>
+</form>
+
         {% if message %}
             <p>{{ message }}</p>
         {% endif %}
@@ -77,6 +93,44 @@
 <footer>
     <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
 </footer>
+  <script>
+    let airportCounter = 0;  // Start counter for intermediate airports
+    const maxIntermediateAirports = {{ max_intermediate_airports }};  // Set the maximum number of intermediate airports
 
+    // Function to add a new intermediate airport row
+    function addIntermediateAirport() {
+        if (airportCounter < maxIntermediateAirports) {
+            const container = document.getElementById('intermediate_airports_container');
+            const newRow = document.createElement('div');
+            newRow.classList.add('intermediate_airport_row');
+            newRow.id = 'row_' + airportCounter;
+
+            newRow.innerHTML = `
+                <select name="intermediate_airports[${airportCounter}][id]" required>
+                    <option value="" disabled selected>Chọn sân bay trung gian</option>
+                    {% for airport in airports %}
+                        <option value="{{ airport.id }}">{{ airport.tenSanBay }} ({{ airport.maSanBay }})</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="intermediate_airports[${airportCounter}][stop_time]" placeholder="Thời gian dừng (hh:mm)" required>
+                <button type="button" class="remove-btn" onclick="removeIntermediateAirport(${airportCounter})">Xóa</button>
+            `;
+
+            container.appendChild(newRow);
+            airportCounter++;  // Increment the counter for the next row
+        } else {
+            alert('Bạn đã vượt quá số lượng sân bay trung gian tối đa!');
+        }
+    }
+
+    // Function to remove an intermediate airport row
+    function removeIntermediateAirport(rowId) {
+        const row = document.getElementById('row_' + rowId);
+        if (row) {
+            row.remove();
+            airportCounter--;  // Decrease the counter when a row is removed
+        }
+    }
+</script>
 </body>
 </html>

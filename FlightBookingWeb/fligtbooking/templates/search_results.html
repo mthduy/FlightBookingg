@@ -27,7 +27,16 @@
             <p>Giờ khởi hành: <strong>{{ flight.thoiGianKhoiHanh }}</strong></p>
             <p>Giờ gian bay: <strong>{{ flight.thoiGianBay }}</strong></p>
             <p>Giá: <strong>{{ min_price  }} - {{ max_price   }}</strong> VND</p>
-            <a href="{{ url_for('booking', flight_id=flight.id) }}" class="search-btn-primary">Đặt vé</a>
+
+            {% set flight_time = flight.thoiGianKhoiHanh %}
+            {% set current_time = current_time %}
+            {% set booking_limit_time = current_time + booking_time_limit * timedelta(hours=1) %}
+            {% if flight_time < booking_limit_time %}
+                <p>Bạn không thể đặt vé này do thời gian đặt trước tối thiểu là {{ booking_time_limit }} giờ</p>
+            {% else %}
+                <a href="{{ url_for('booking', flight_id=flight.id) }}" class="search-btn-primary">Đặt vé</a>
+            {% endif %}
+
         </li>
         {% endfor %}
     </ul>

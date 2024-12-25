@@ -10,7 +10,7 @@ from select import select
 
 from fligtbooking import app,admin,login_manager
 from fligtbooking.dao import SanBayNameDAO, customter_search_flights
-from fligtbooking.models import Role
+from fligtbooking.models import Role, Regulation
 
 
 @app.route("/")
@@ -30,6 +30,9 @@ def search():
     if not current_user.is_authenticated:
         return redirect("/login")  # Hoặc điều chỉnh đường dẫn phù hợp
 
+    booking_time=dao.get_current_regulation()
+    booking_time_limit=booking_time.customer_booking_time
+
     if request.method == 'POST':
         # Lấy dữ liệu từ form
         from_location = request.form['from_location']
@@ -38,6 +41,8 @@ def search():
         return_date = request.form.get('return_date')  # get() để tránh lỗi khi không có giá trị
         passengers = request.form['passengers']
 
+
+
         results = customter_search_flights( from_location = from_location,
                                   to_location = to_location,
                                   departure_date = departure_date,
@@ -45,14 +50,23 @@ def search():
                                   passengers = passengers
                                   )
 
+        current_time = datetime.now()
+
         from_locationname = SanBayNameDAO.get_airport_name_by_id(from_location)
         to_locationname = SanBayNameDAO.get_airport_name_by_id(to_location)
 
         # Trả về trang kết quả tìm kiếm
-        return render_template('/search_results.html',results=results,from_locationname=from_locationname,to_locationname=to_locationname,departure_date=departure_date)
+        return render_template('/search_results.html',results=results,
+                                                                        from_locationname=from_locationname,
+                                                                        to_locationname=to_locationname,
+                                                                        departure_date=departure_date,
+                                                                        current_time=current_time,
+                                                                        booking_time_limit=booking_time_limit,
+                                                                        timedelta=timedelta )
 
     # Nếu là GET request, chỉ hiển thị trang tìm kiếm
     return render_template('search.html', airports=airports)
+
 
 
 @app.route('/booking/<flight_id>', methods=['GET', 'POST'])
@@ -280,38 +294,65 @@ def employee_flight_search():
 def employee_schedule_flight():
     # Lấy danh sách các sân bay
     airports = dao.get_all_airports()
+    regulation = Regulation.query.first()
 
-    if not airports:
-        return render_template('employee/employee_schedule_flight.html', airports=airports,
-                               message="Không có sân bay nào trong hệ thống!")
-    # Nếu phương thức là POST, xử lý dữ liệu từ form
+    # Parse ticket_classes thành danh sách'
+    raw_ticket_classes = eval(regulation.ticket_classes) if regulation.ticket_classes else []
+
+    # Số lượng sân bay trung gian tối đa
+    max_intermediate_airports = regulation.max_intermediate_airports
+
+    # Thêm chỉ số index cho từng loại vé
+    ticket_classes = [
+        {"index": idx + 1, "class_name": item["class_name"].strip(), "price": item["price"]}
+        for idx, item in enumerate(raw_ticket_classes)
+    ]
+
     if request.method == 'POST':
         # Lấy dữ liệu từ form
         flight_id = request.form.get("flight_id")
         departure_airport_id = int(request.form.get("departure_airport"))
         arrival_airport_id = int(request.form.get("arrival_airport"))
         flight_time = datetime.strptime(request.form.get("flight_time"), "%Y-%m-%dT%H:%M")
+        flight_duration = timedelta(
+            hours=int(request.form.get("flight_duration").split(":")[0]),
+            minutes=int(request.form.get("flight_duration").split(":")[1])
+        )
 
-        # Chuyển đổi thời gian bay (dạng chuỗi "hh:mm" thành timedelta)
-        flight_duration_str = request.form.get("flight_duration")
-        flight_duration = timedelta(hours=int(flight_duration_str.split(":")[0]),
-                                    minutes=int(flight_duration_str.split(":")[1]))
-        first_class_seats = int(request.form.get("first_class_seats"))
-        second_class_seats = int(request.form.get("second_class_seats"))
-        first_class_price = int(request.form.get("first_class_price"))
-        second_class_price = int(request.form.get("second_class_price"))
+        # Lấy thông tin sân bay trung gian
+        intermediate_airports = []
+        for i in range(max_intermediate_airports):
+            airport_id = request.form.get(f"intermediate_airports[{i}][id]")
+            stop_time = request.form.get(f"intermediate_airports[{i}][stop_time]")
+            if airport_id and stop_time:
+                intermediate_airports.append({
+                    "airport_id": int(airport_id),
+                    "stop_time": stop_time
+                })
 
+        # Lấy thông tin ghế và giá tiền
+        seats_info = []
+        for ticket_class in ticket_classes:
+            seats = int(request.form.get(f"class_{ticket_class['index']}_seats"))
+            price = int(request.form.get(f"class_{ticket_class['index']}_price"))
+            seats_info.append({
+                "class_name": ticket_class["class_name"],
+                "price": price,
+                "seats": seats
+            })
 
-        # Gọi hàm thêm lịch bay
-        dao.add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
-                            flight_time, flight_duration, first_class_seats, second_class_seats, first_class_price,second_class_price)
+        # Gọi hàm thêm lịch bay và truyền tất cả các thông tin vào, bao gồm seats_info
+        dao.add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, flight_time,
+                                flight_duration, intermediate_airports, seats_info)
 
-        # Thông báo thành công và render lại trang
         return render_template('employee/employee_schedule_flight.html', airports=airports,
+                               ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports,
                                message="Lập lịch chuyến bay thành công!")
 
-    # Nếu là GET, chỉ cần render lại form với danh sách sân bay
-    return render_template('employee/employee_schedule_flight.html', airports=airports)
+    return render_template('employee/employee_schedule_flight.html', airports=airports,
+                           ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports)
+
+
 
 
 # @app.route('/admin')

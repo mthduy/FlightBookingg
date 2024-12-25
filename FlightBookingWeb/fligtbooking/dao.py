@@ -2,7 +2,7 @@ import hashlib
 import json
 
 from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType, HanhKhach, VeMayBay, \
-    Regulation
+    Regulation, SanBayTrungGian
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -24,20 +24,18 @@ def get_flight(flight_id):
         return None
 
 
-def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
-                        flight_time, flight_duration, first_class_seats, second_class_seats,
-                        first_class_price, second_class_price):
-    # Tạo đối tượng Tuyến Bay (TuyenBay) mới
+def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, flight_time, flight_duration, intermediate_airports, seats_info):
+    # Create the flight route
     tuyen_bay = TuyenBay(
         maTuyenBay=flight_id,
         sanBayDi_id=departure_airport_id,
         sanBayDen_id=arrival_airport_id,
-        soChuyenBay=1  # Giả sử số chuyến bay ban đầu là 1
+        soChuyenBay=1  # Initial flight count
     )
     db.session.add(tuyen_bay)
     db.session.commit()
 
-    # Tạo đối tượng Chuyến Bay (ChuyenBay) mới
+    # Create the flight instance
     chuyen_bay = ChuyenBay(
         maChuyenBay=flight_id,
         thoiGianKhoiHanh=flight_time,
@@ -48,45 +46,37 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id,
     db.session.add(chuyen_bay)
     db.session.commit()
 
-    # Tạo các loại vé (TicketType) cho chuyến bay
-    first_class_ticket = TicketType(
-        name="Hạng 1",
-        giaTien=first_class_price,
-        chuyenbay_id=chuyen_bay.id
-    )
-    second_class_ticket = TicketType(
-        name="Hạng 2",
-        giaTien=second_class_price,
-        chuyenbay_id=chuyen_bay.id
-    )
-
-    db.session.add(first_class_ticket)
-    db.session.add(second_class_ticket)
+    # Add intermediate airports (if any)
+    for airport in intermediate_airports:
+        intermediate_stop = SanBayTrungGian(
+            chuyenBay_id=chuyen_bay.id,
+            sanBay_id=airport["airport_id"],
+            thoiGianDung=airport["stop_time"]
+        )
+        db.session.add(intermediate_stop)
     db.session.commit()
 
-    # Thêm ghế hạng 1
-    for i in range(first_class_seats):
-        seat = Seat(
-            seat_number=f"{i + 1}A",  # Số ghế hạng 1 từ 1A, 2A, v.v.
-            status='available',  # Trạng thái ghế là 'available'
-            hang_ghe=HangGhe.HANG_1,  # Ghế hạng 1
-            chuyenbay_id=chuyen_bay.id,  # Liên kết với chuyến bay
-            ticket_type_id=first_class_ticket.id  # Liên kết với loại vé hạng 1
-        )
-        db.session.add(seat)
+    # Create ticket types and seats for each class
+    for seat in seats_info:
+        ticket_type = TicketType(name=seat["class_name"], giaTien=seat["price"], chuyenbay_id=chuyen_bay.id)
+        db.session.add(ticket_type)
+        db.session.commit()
 
-    # Thêm ghế hạng 2
-    for i in range(second_class_seats):
-        seat = Seat(
-            seat_number=f"{i + 1}B",  # Số ghế hạng 2 từ 1B, 2B, v.v.
-            status='available',  # Trạng thái ghế là 'available'
-            hang_ghe=HangGhe.HANG_2,  # Ghế hạng 2
-            chuyenbay_id=chuyen_bay.id,  # Liên kết với chuyến bay
-            ticket_type_id=second_class_ticket.id  # Liên kết với loại vé hạng 2
-        )
-        db.session.add(seat)
+        # Create seats for each ticket type
+        for i in range(seat["seats"]):
+            seat_instance = Seat(
+                seat_number=f"{seat['class_name']}_{i + 1}",
+                status="available",  # Assuming status "available" by default
+                hang_ghe=HangGhe.HANG_1 if seat["class_name"] == "Hạng 1" else HangGhe.HANG_2,
+                chuyenbay_id=chuyen_bay.id,
+                ticket_type_id=ticket_type.id
+            )
+            db.session.add(seat_instance)
+        db.session.commit()
 
-    db.session.commit()  # Lưu tất cả ghế vào cơ sở dữ liệu
+
+
+
 
 
 from sqlalchemy import func
@@ -312,3 +302,4 @@ def get_current_regulation():
 
 def get_chuyenbay_by_maChuyenBay(ma_chuyen_bay):
     return ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
+
