@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_login import logout_user, login_user, current_user
+from wtforms.validators import email
 
 import dao
 from select import select
@@ -152,6 +153,7 @@ def callback():
                 'email': customer_info.email,
                 'maChuyenBay': customer_info.maChuyenBay
             }
+            dao.send_email(customer_info.email, "Test","Gửi email test")
 
             return redirect(url_for('booking_results',))
         except ValueError as e:

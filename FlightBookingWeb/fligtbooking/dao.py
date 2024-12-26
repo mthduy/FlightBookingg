@@ -336,3 +336,33 @@ def get_current_regulation():
 def get_chuyenbay_by_maChuyenBay(ma_chuyen_bay):
     return ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
 
+
+#email
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_email(to_email, subject, body):
+    from_email = 'nguyenlethanhthang@gmail.com'
+    password = 'rudd yixj kljq ismb'  # Thay bằng mật khẩu ứng dụng mới
+
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(from_email, password)
+        text = msg.as_string()
+        server.sendmail(from_email, to_email, text)
+        server.quit()
+
+        print('Email đã được gửi thành công!')
+    except Exception as e:
+        print(f'Có lỗi xảy ra: {e}')
+
+
