@@ -186,6 +186,15 @@ class Regulation(db.Model):
     ticket_classes = db.Column(db.String(500),nullable=False, default="[]")
 
 
+class TmpCustomerInfo(db.Model):
+    __tablename__ = 'tmp_customer_info'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    apptransid = Column(db.String(500), nullable=False)
+    name = db.Column(db.String(50),nullable=False)
+    email = db.Column(db.String(50),nullable=False)
+    maChuyenBay = db.Column(db.String(50),nullable=False)
+
+
 # Tạo cơ sở dữ liệu và thêm sân bay mặc định
 if __name__ == "__main__":
     with app.app_context():

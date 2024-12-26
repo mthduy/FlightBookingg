@@ -101,20 +101,33 @@ def booking(flight_id):
 
 @app.route('/payment/<flight_id>', methods=['POST', 'GET'])
 def payment(flight_id):
-        price = request.form['price']  # Lấy totalPrice từ form
-        return render_template('order.html', price=price)
+    price = request.form.get('price', '0')
+
+    # Lấy dữ liệu từ form
+    name = request.form.get("name")
+    email = request.form.get("email")
+    maChuyenBay = request.form.get("maChuyenBay")
+
+    return render_template('order.html', price=price, name=name, email= email,maChuyenBay=maChuyenBay)
+
 
 
 @app.route("/order/<flight_id>", methods=["POST"])
 def order(flight_id):
     # Lấy totalPrice từ form
+    apptransid = dao.generate_apptransid()
     price = request.form.get('price')
+    name = request.form.get('name')
+    email = request.form.get('email')
+    maChuyenBay = request.form.get('maChuyenBay')
+    dao.save_tmp_customer_info(apptransid,name,email,maChuyenBay)
+
     redirect_url = "http://127.0.0.1:5000/callback"
     if not price:
         return "Dữ liệu không hợp lệ!", 400  # Nếu không nhận được totalPrice
     # Chuyển tiếp đến ZaloPay để thanh toán
     zalopay_dao = dao.ZaloPayDAO()
-    pay_url = zalopay_dao.create_order(price, redirect_url)
+    pay_url = zalopay_dao.create_order(price, redirect_url,apptransid)
     if "Error" not in pay_url:
         # Nếu không có lỗi, chuyển hướng đến trang thanh toán ZaloPay
         return redirect(pay_url)
@@ -122,21 +135,39 @@ def order(flight_id):
         # Nếu có lỗi, hiển thị thông báo lỗi
         return pay_url
 
-
-# Callback endpoint
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
-    result = request.args  # Lấy các tham số từ URL callback sandbox ZaloPay
-    status = result.get("status")
+    result = request.args  # Retrieve parameters from the ZaloPay callback
 
-    if status == "1":  # Nếu status = 1, thanh toán thành công
-        return redirect(url_for('booking_results'))  # Quay lại trang kết quả của bạn
+    apptransid = result.get("apptransid")
+    status = result.get("status")
+    customer_info = dao.get_tmp_customer_info(apptransid)
+
+    if status == "1":  # Payment successful
+        try:
+            # Lưu thông tin khách hàng vào session
+            session['customer_info'] = {
+                'apptransid': customer_info.apptransid,
+                'name': customer_info.name,
+                'email': customer_info.email,
+                'maChuyenBay': customer_info.maChuyenBay
+            }
+
+            return redirect(url_for('booking_results',))
+        except ValueError as e:
+            return f"Error: {e}", 400
     else:
-        return "Thanh toán không thành công! Vui lòng thử lại."
+        return "Payment failed! Please try again.", 400
+
+
 
 @app.route("/booking_results")
 def booking_results():
-    return render_template("booking_results.html")
+    customer_info = session.get('customer_info')
+    if customer_info:
+        return render_template('booking_results.html', customer_info=customer_info)
+    else:
+        return "Thông tin không hợp lệ.", 400
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -352,14 +383,6 @@ def employee_schedule_flight():
     return render_template('employee/employee_schedule_flight.html', airports=airports,
                            ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports)
 
-
-
-
-# @app.route('/admin')
-# def admin():
-#     if session.get("role") != "admin":
-#         return redirect(url_for("login"))
-#     return render_template('admin/admin.html')
 
 @app.route('/admin_manage_employees')
 def admin_manage_employees():

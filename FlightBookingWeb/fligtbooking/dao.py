@@ -2,7 +2,7 @@ import hashlib
 import json
 
 from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType, HanhKhach, VeMayBay, \
-    Regulation, SanBayTrungGian
+    Regulation, SanBayTrungGian, TmpCustomerInfo
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -170,6 +170,24 @@ import hmac
 import time
 import requests
 
+def get_tmp_customer_info(apptransid):
+    return TmpCustomerInfo.query.filter_by(apptransid=apptransid).first()
+
+def save_tmp_customer_info(apptransid, name, email, maChuyenBay):
+    tmp_customer_info = TmpCustomerInfo(
+        apptransid=apptransid,
+        name=name,
+        email=email,
+        maChuyenBay=maChuyenBay,
+    )
+    db.session.add(tmp_customer_info)
+    db.session.commit()
+
+def  generate_apptransid():
+    app_time = str(int(time.time() * 1000))
+    app_trans_id = f'220817_{app_time}'
+    return app_trans_id
+
 class ZaloPayDAO:
     def __init__(self):
         self.app_id = '2553'  # ID của ứng dụng ZaloPay
@@ -177,11 +195,11 @@ class ZaloPayDAO:
         self.callback_url = 'http://127.0.0.1:5000/callback'  # URL callback
         self.bank_code = 'zalopayapp'  # Mã ngân hàng (ZaloPay App)
 
-    def create_order(self, amount, redirect_url):
+    def create_order(self, amount, redirect_url, app_trans_id=None):
         # Dữ liệu đơn hàng
         app_user = 'ZaloPayDemo'  # Tên người dùng ứng dụng
         app_time = str(int(time.time() * 1000))  # Thời gian hiện tại
-        app_trans_id = f'220817_{app_time}'  # ID giao dịch duy nhất
+        app_trans_id =app_trans_id # ID giao dịch duy nhất
         embed_data = json.dumps({'redirecturl': redirect_url})
         item = '[]'  # Danh sách các sản phẩm (ở đây là chuỗi rỗng)
         description = f'ZaloPayDemo - Thanh toán cho đơn hàng #{app_trans_id}'

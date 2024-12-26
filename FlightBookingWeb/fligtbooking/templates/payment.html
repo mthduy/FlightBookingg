@@ -49,7 +49,10 @@
             <p><strong>Tổng tiền:</strong> {{price}} VNĐ</p>
         </div>
         <!-- ZaloPay Payment Button -->
-       <form action="/order/{{ flight.id }}" method="post">
+       <form action="/order/{{ flight.id }}" method="POST">
+           <input type="hidden" name="maChuyenBay" value="{{ flight.maChuyenBay }}">
+            <input type="hidden" name="name" value="{{ name }}">
+            <input type="hidden" name="email" value="{{ email }}">
             <input type="hidden" name="price" value="{{ price }}">
             <button type="submit" class="btn-zalopay">Thanh Toán qua ZaloPay</button>
         </form>
