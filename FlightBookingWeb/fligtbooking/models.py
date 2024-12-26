@@ -39,7 +39,7 @@ class TuyenBay(db.Model):
     # Mối quan hệ
     sanBayDi = relationship("SanBay", foreign_keys=[sanBayDi_id])  # Mối quan hệ với sân bay đi
     sanBayDen = relationship("SanBay", foreign_keys=[sanBayDen_id])  # Mối quan hệ với sân bay đến
-    chuyenBays = relationship("ChuyenBay", backref="tuyenBay_relationship")  # Đổi tên backref
+    chuyenBays = relationship("ChuyenBay", back_populates="tuyenBay")  # Đổi tên backref
 
 
 class ChuyenBay(db.Model):
@@ -53,13 +53,14 @@ class ChuyenBay(db.Model):
     # Tham chiếu đến bảng TuyenBay
     tuyenBay_id = Column(Integer, ForeignKey('tuyenbay.id'), nullable=False)
     # Mối quan hệ với bảng TuyenBay (Tuyến bay)
-    tuyenBay = relationship("TuyenBay", foreign_keys=[tuyenBay_id])  # Liên kết với bảng TuyenBay
+    tuyenBay = relationship("TuyenBay", foreign_keys=[tuyenBay_id], cascade="all, delete", back_populates="chuyenBays")  # Liên kết với bảng TuyenBay
     # Mối quan hệ với bảng Seat (Ghế ngồi) - Chuyến bay có nhiều ghế
-    seats = relationship("Seat", back_populates="chuyenBay")  # Liên kết với bảng ghế ngồi
+    seats = relationship("Seat", back_populates="chuyenBay", cascade="all, delete")  # Liên kết với bảng ghế ngồi
     # Mối quan hệ với bảng TicketType (Loại vé) - Một chuyến bay có nhiều loại vé
-    ticket_types = relationship("TicketType", back_populates="chuyenBay")  # Liên kết với bảng loại vé
+    ticket_types = relationship("TicketType", back_populates="chuyenBay", cascade="all, delete")  # Liên kết với bảng loại vé
     # Mối quan hệ với bảng SanBayTrungGian (Sân bay trung gian) - Chuyến bay có thể có nhiều sân bay trung gian
-    sanBayTrungGians = relationship("SanBayTrungGian", back_populates="chuyenBay")
+    sanBayTrungGians = relationship("SanBayTrungGian", back_populates="chuyenBay", cascade="all, delete")
+    veMayBays = relationship('VeMayBay', back_populates='chuyenBay', cascade='all, delete')
 
 
 class TicketType(db.Model):
@@ -123,7 +124,8 @@ class VeMayBay(db.Model):
     # Mối quan hệ với bảng HanhKhach
     hanhKhach = relationship('HanhKhach', backref='veMayBays')
     # Mối quan hệ với bảng ChuyenBay
-    chuyenBay = relationship('ChuyenBay', backref='veMayBays')
+    # chuyenBay = relationship('ChuyenBay', backref='veMayBays',cascade="all, delete")
+    chuyenBay = relationship('ChuyenBay', back_populates='veMayBays')
 
 
 # Bảng Hành Khách

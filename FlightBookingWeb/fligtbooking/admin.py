@@ -3,14 +3,18 @@ import json
 from flask import redirect, request, flash
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.form import DateTimeField, TimeField
 from flask_login import current_user, logout_user
 
 from fligtbooking import app, db
-from fligtbooking.models import Role, Regulation
+from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay
 
 # Cấu hình Admin trang home
 admin = Admin(app=app, name="Flight Booking", template_mode="bootstrap4")
 
+class MyModelView(ModelView):
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role == Role.ADMIN
 
 class MyBaseView(BaseView):
     def is_accessible(self):
@@ -68,15 +72,17 @@ class AdminManageEmployeeView(MyBaseView):
         return self.render('admin/admin_manage_employees.html')
 
 
-class AdminManagerFlightsView(MyBaseView):
-    @expose('/')
-    def index(self):
-        return self.render('admin/admin_manage_flights.html')
+class AdminManagerFlightsView(MyModelView):
+    column_list = ["maChuyenBay","thoiGianKhoiHanh", "thoiGianDen","thoiGianBay"]
+    column_searchable_list = ["id", "maChuyenBay"]
+    column_filters = ["id", "maChuyenBay"]
+    can_export = True
 
-class AdminManagerRoutesView(MyBaseView):
-    @expose('/')
-    def index(self):
-        return self.render('admin/admin_manage_routes.html')
+class AdminManagerRoutesView(MyModelView):
+    column_list = ["maTuyenBay", "sanBayDi_id", "sanBayDen_id", "soChuyenBay"]
+    column_searchable_list = ["id", "maTuyenBay"]
+    column_filters = ["id", "maTuyenBay"]
+    can_export = True
 
 class AdminReportStatisticsView(MyBaseView):
     @expose('/')
@@ -99,29 +105,7 @@ class LogoutView(MyBaseView):
 # Thêm View vào Flask-Admim
 admin.add_view(AdminChangeRegulationsView(name="Thay đổi quy định", endpoint="admin_change_regulations"))
 admin.add_view(AdminManageEmployeeView(name="Quản lý nhân viên", endpoint="admin_manage_employees"))
-admin.add_view(AdminManagerFlightsView(name="Quản lý chuyến bay",endpoint="admin_manager_flights"))
-admin.add_view(AdminManagerRoutesView(name="Quản lý tuyến bay", endpoint="admin_manager_routes"))
+admin.add_view(AdminManagerFlightsView(ChuyenBay,db.session,name="Quản lý chuyến bay"))
+admin.add_view(AdminManagerRoutesView(TuyenBay,db.session,name="Quản lý tuyến bay"))
 admin.add_view(AdminReportStatisticsView(name="Thống kê báo cáo", endpoint="admin_report_statistics"))
 admin.add_view(LogoutView(name="Đăng xuất"))
-
-# #CHO NHAN VIEN
-# class EmployeeFlightSearchView(BaseView):
-#     @expose('/')
-#     def index(self):
-#         # Render file template admin_manage_employees.html từ thư mục admin
-#         return self.render('employee/employee_flight_search.html')
-#
-# class EmployeeScheduleFlightView(BaseView):
-#     @expose('/')
-#     def index(self):
-#         # Render file template admin_manage_employees.html từ thư mục admin
-#         return self.render('employee/employee_schedule_flight.html')
-#
-# class EmployeeSellTicketView(BaseView):
-#     @expose('/')
-#     def index(self):
-#         return self.render('employee/employee_sell_ticket.html')
-#
-# admin.add_view(EmployeeFlightSearchView(name="Flight Search",endpoint="employee_flight_search"))
-# admin.add_view(EmployeeScheduleFlightView(name="Flight Schedule",endpoint="employee_schedule_flight"))
-# admin.add_view(EmployeeSellTicketView(name="Sell Ticket",endpoint="employee_sell_ticket"))
