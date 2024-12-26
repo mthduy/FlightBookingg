@@ -34,7 +34,7 @@ class AdminChangeRegulationsView(MyBaseView):
             for i in range(1, ticket_class_count + 1):
                 class_name = request.form.get(f'class-{i}')
                 price = int(request.form.get(f'price-{i}'))
-                count = int(request.form.get(f'price-{i}'))
+                count = int(request.form.get(f'count-{i}'))
                 ticket_classes.append({"class_name": class_name, "price": price,"count":count})
             ticket_classes_json = json.dumps(ticket_classes)
 

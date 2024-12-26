@@ -304,7 +304,7 @@ def employee_schedule_flight():
 
     # Thêm chỉ số index cho từng loại vé
     ticket_classes = [
-        {"index": idx + 1, "class_name": item["class_name"].strip(), "price": item["price"]}
+        {"index": idx + 1, "class_name": item["class_name"].strip(), "price": item["price"], "count": item["count"]}
         for idx, item in enumerate(raw_ticket_classes)
     ]
 

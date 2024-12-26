@@ -46,37 +46,52 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, fli
     db.session.add(chuyen_bay)
     db.session.commit()
 
-    # Add intermediate airports (if any)
-    for airport in intermediate_airports:
-        intermediate_stop = SanBayTrungGian(
-            chuyenBay_id=chuyen_bay.id,
-            sanBay_id=airport["airport_id"],
-            thoiGianDung=airport["stop_time"]
-        )
-        db.session.add(intermediate_stop)
-    db.session.commit()
+    # Initialize row counter for all classes
+    current_row = 1
 
     # Create ticket types and seats for each class
     for seat in seats_info:
-        ticket_type = TicketType(name=seat["class_name"], giaTien=seat["price"], chuyenbay_id=chuyen_bay.id)
+        ticket_type = TicketType(
+            name=seat["class_name"],
+            giaTien=seat["price"],
+            chuyenbay_id=chuyen_bay.id
+        )
         db.session.add(ticket_type)
         db.session.commit()
 
-        # Create seats for each ticket type
-        for i in range(seat["seats"]):
-            seat_instance = Seat(
-                seat_number=f"{seat['class_name']}_{i + 1}",
-                status="available",  # Assuming status "available" by default
-                hang_ghe=HangGhe.HANG_1 if seat["class_name"] == "Hạng 1" else HangGhe.HANG_2,
-                chuyenbay_id=chuyen_bay.id,
-                ticket_type_id=ticket_type.id
-            )
-            db.session.add(seat_instance)
+        seat_letters = ["A", "B", "C", "D", "E", "F"]
+        seats_remaining = seat["seats"]
+
+        class_name_mapping = {
+            "1": HangGhe.HANG_1,
+            "2": HangGhe.HANG_2,
+            "3": HangGhe.HANG_3,
+            "4": HangGhe.HANG_4,
+        }
+
+        # Dynamically determine the hang_ghe based on the class_name
+        hang_ghe = class_name_mapping.get(seat["class_name"], None)
+
+        if hang_ghe is None:
+            raise ValueError(f"Invalid ticket class: {seat['class_name']}")
+
+        while seats_remaining > 0:
+            for letter in seat_letters:
+                if seats_remaining == 0:
+                    break
+                seat_number = f"{current_row}{letter}"
+                seat_instance = Seat(
+                    seat_number=seat_number,
+                    status="available",  # Default status
+                    hang_ghe=hang_ghe.value,  # Store the actual value (e.g., 'Hạng 1')
+                    chuyenbay_id=chuyen_bay.id,
+                    ticket_type_id=ticket_type.id
+                )
+                db.session.add(seat_instance)
+                seats_remaining -= 1
+            current_row += 1  # Move to the next row
+
         db.session.commit()
-
-
-
-
 
 
 from sqlalchemy import func

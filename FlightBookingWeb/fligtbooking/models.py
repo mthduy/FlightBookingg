@@ -9,7 +9,8 @@ from fligtbooking import db, app
 class HangGhe(enum.Enum):
     HANG_1 = 'Hạng 1'
     HANG_2 = 'Hạng 2'
-
+    HANG_3 = 'Hạng 3'
+    HANG_4 = 'Hạng 4'
     def __str__(self):
         return self.value
 
@@ -78,7 +79,8 @@ class Seat(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)  # Khóa chính, tự động tăng
     seat_number = Column(String(10), nullable=False)  # Số ghế (ví dụ: 1A, 2B, v.v.)
     status = Column(String(20), nullable=False, default='available')  # Trạng thái của ghế: "available" hoặc "sold"
-    hang_ghe = Column(db.Enum(HangGhe), nullable=False, default=HangGhe.HANG_2)  # Mặc định là hạng 2
+    # Store the Enum value as a string, not the Enum member
+    hang_ghe = Column(db.String(50), nullable=False, default=HangGhe.HANG_2.value)  # Store the actual value
 
     # Tham chiếu đến bảng ChuyenBay (Chuyến bay)
     chuyenbay_id = Column(Integer, ForeignKey('chuyenbay.id'), nullable=False)
