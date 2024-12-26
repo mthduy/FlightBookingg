@@ -654,12 +654,6 @@ footer {
     color: black;
 }
 
-#seat_map {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 10px;
-    margin: 20px 0;
-}
 
 .seat {
     padding: 10px;
@@ -686,7 +680,7 @@ footer {
 }
 #seat_map {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Tạo 4 cột */
+    grid-template-columns: repeat(6, 1fr); /* Tạo 4 cột */
     gap: 10px; /* Khoảng cách giữa các ghế */
     padding: 20px; /* Khoảng cách từ các cạnh */
 }

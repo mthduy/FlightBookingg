@@ -67,15 +67,33 @@ document.addEventListener('DOMContentLoaded', function () {
 function generateTicketClasses() {
         const count = document.getElementById('ticket-class-count').value;
         const tbody = document.getElementById('ticket-classes-body');
-        tbody.innerHTML = ''; // Xóa các dòng cũ
+        tbody.innerHTML = '';
 
         for (let i = 1; i <= count; i++) {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td><input type="text" name="class-${i}" value=" ${i}" readonly></td>
                 <td><input type="number" name="price-${i}" placeholder="Nhập đơn giá" required></td>
-                <td><input type="number" name="count-${i}" placeholder="Nhập số ghế" required></td>
+                <td>
+                    <input type="number" name="count-${i}" placeholder="Nhập số ghế (phải >= 6 và chia hết cho 6)" required>
+                    <div class="error-message" id="error-message-${i}" style="color: red; display: none;">Số lượng ghế phải > 6 và chia hết cho 6</div>
+                </td>
             `;
             tbody.appendChild(row);
+
+            const countInput = row.querySelector(`input[name="count-${i}"]`);
+            const errorMessage = row.querySelector(`#error-message-${i}`);
+
+            countInput.addEventListener('input', function () {
+                const countValue = parseInt(countInput.value);
+
+                if (countValue < 6 || countValue % 6 !== 0) {
+                    errorMessage.style.display = 'block';
+                    countInput.setCustomValidity('Số lượng ghế phải >= 6 và chia hết cho 6');
+                } else {
+                    errorMessage.style.display = 'none';
+                    countInput.setCustomValidity('');
+                }
+            });
         }
-    }
+}
