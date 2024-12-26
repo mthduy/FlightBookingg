@@ -74,6 +74,7 @@ function generateTicketClasses() {
             row.innerHTML = `
                 <td><input type="text" name="class-${i}" value=" ${i}" readonly></td>
                 <td><input type="number" name="price-${i}" placeholder="Nhập đơn giá" required></td>
+                <td><input type="number" name="count-${i}" placeholder="Nhập số ghế" required></td>
             `;
             tbody.appendChild(row);
         }
