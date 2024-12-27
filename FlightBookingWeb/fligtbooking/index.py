@@ -334,7 +334,9 @@ def employee_schedule_flight():
 
     # Số lượng sân bay trung gian tối đa
     max_intermediate_airports = regulation.max_intermediate_airports
-
+    min_stop_time = regulation.min_stop_time
+    max_stop_time = regulation.max_stop_time
+    min_flight_time = regulation.min_flight_time
     # Thêm chỉ số index cho từng loại vé
     ticket_classes = [
         {"index": idx + 1, "class_name": item["class_name"].strip(), "price": item["price"], "count": item["count"]}
@@ -379,10 +381,10 @@ def employee_schedule_flight():
                                 flight_duration, intermediate_airports, seats_info)
 
         return render_template('employee/employee_schedule_flight.html', airports=airports,
-                               ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports,
+                               ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports,max_stop_time=max_stop_time,min_stop_time=min_stop_time,min_flight_time=min_flight_time,
                                message="Lập lịch chuyến bay thành công!")
 
-    return render_template('employee/employee_schedule_flight.html', airports=airports,
+    return render_template('employee/employee_schedule_flight.html', airports=airports,max_stop_time=max_stop_time,min_stop_time=min_stop_time,min_flight_time=min_flight_time,
                            ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports)
 
 

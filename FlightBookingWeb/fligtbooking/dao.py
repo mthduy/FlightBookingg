@@ -30,7 +30,6 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, fli
         maTuyenBay=flight_id,
         sanBayDi_id=departure_airport_id,
         sanBayDen_id=arrival_airport_id,
-        soChuyenBay=1  # Initial flight count
     )
     db.session.add(tuyen_bay)
     db.session.commit()
@@ -44,6 +43,16 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, fli
         tuyenBay_id=tuyen_bay.id
     )
     db.session.add(chuyen_bay)
+    db.session.commit()
+
+    # Add intermediate airports (if any)
+    for intermediate_airport in intermediate_airports:
+        intermediate_stop = SanBayTrungGian(
+            chuyenBay_id=chuyen_bay.id,
+            sanBay_id=intermediate_airport["airport_id"],
+            thoiGianDung=intermediate_airport["stop_time"]
+        )
+        db.session.add(intermediate_stop)
     db.session.commit()
 
     # Initialize row counter for all classes
@@ -246,7 +255,7 @@ class ZaloPayDAO:
 def get_all_flights():
     return ChuyenBay.query.all()
 
-def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, price, selected_seat):
+def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai,email, price, selected_seat):
     # Tìm chuyến bay theo mã
     chuyen_bay = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
     if not chuyen_bay:
@@ -257,7 +266,7 @@ def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, price, selec
         hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
     else:
         # Tạo hành khách mới
-        hanh_khach = HanhKhach(tenHanhKhach=tenHanhKhach, soCMND=soCMND, soDienThoai=soDienThoai)
+        hanh_khach = HanhKhach(tenHanhKhach=tenHanhKhach, soCMND=soCMND, soDienThoai=soDienThoai, email=email)
         db.session.add(hanh_khach)
         db.session.flush()  # Lấy ID của hành khách vừa thêm
 
@@ -266,6 +275,7 @@ def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, price, selec
         veMayBay_id=f"MB{hanh_khach.id:06d}",  # Sinh mã vé dựa trên ID hành khách
         hanhKhach_id=hanh_khach.id,
         chuyenBay_id=chuyen_bay.id,
+        email = email,
         giaVe=price,
         seat_number=selected_seat
     )

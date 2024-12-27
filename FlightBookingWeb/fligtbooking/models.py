@@ -34,7 +34,7 @@ class TuyenBay(db.Model):
     maTuyenBay = Column(String(50), unique=True, nullable=False)  # Mã tuyến bay
     sanBayDi_id = Column(Integer, ForeignKey('sanbay.id'), nullable=False)  # Sân bay đi
     sanBayDen_id = Column(Integer, ForeignKey('sanbay.id'), nullable=False)  # Sân bay đến
-    soChuyenBay = Column(Integer, nullable=False)  # Số chuyến bay
+
 
     # Mối quan hệ
     sanBayDi = relationship("SanBay", foreign_keys=[sanBayDi_id])  # Mối quan hệ với sân bay đi
@@ -118,6 +118,7 @@ class VeMayBay(db.Model):
     veMayBay_id = Column(String(50), nullable=False)
     hanhKhach_id = Column(Integer, ForeignKey('hanhkhach.id'), nullable=False)  # Khóa ngoại đến bảng HanhKhach
     chuyenBay_id = Column(Integer, ForeignKey('chuyenbay.id'), nullable=False)  # Khóa ngoại đến bảng ChuyenBay
+    email = Column(String(50), nullable=False)
     giaVe = Column(Integer, nullable=False)
     seat_number = Column(String(50), nullable=False)
 
@@ -136,7 +137,7 @@ class HanhKhach(db.Model):
     tenHanhKhach = Column(String(50), nullable=False)
     soCMND = Column(Integer, nullable=False)
     soDienThoai = Column(Integer, nullable=False)
-
+    email = Column(String(50), nullable=False)
     @staticmethod
     def generate_hanhKhach_id(tenHanhKhach, id):
         return tenHanhKhach[:3].upper() + str(id)
