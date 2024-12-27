@@ -29,7 +29,7 @@
         <p>Đặt vé máy bay nhanh chóng và dễ dàng, mọi lúc mọi nơi.</p>
 {% if current_user.is_authenticated %}
     <!-- Nếu người dùng đã đăng nhập -->
-    <a class="btn-primary" href="{{ url_for('search') }}">Đặt vé ngay</a>
+    <a class="btn-primary" href="{{ url_for('show_all_flights') }}">Đặt vé ngay</a>
 {% else %}
     <!-- Nếu chưa đăng nhập -->
     <a class="btn-primary" href="{{ url_for('login', next=url_for('search')) }}">Đặt vé ngay</a>
@@ -61,7 +61,7 @@
     <section class="cta">
         <h2>Đừng bỏ lỡ!</h2>
         <p>Bắt đầu hành trình của bạn ngay hôm nay với giá vé tốt nhất.</p>
-        <a href="/search" class="btn-secondary">Tìm chuyến bay ngay</a>
+        <a href="/show_all_flights" class="btn-secondary">Tìm chuyến bay ngay</a>
     </section>
 </main>
 

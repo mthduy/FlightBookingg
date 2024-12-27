@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt vé máy bay - TravelSky</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+    <a href="/search" class="go_to_search">Tìm kiếm chuyến bay</a>
+</header>
+
+<main class="all_flights">
+    <ul class="search-results-list">
+        {% for flight in flights %}
+            {% set flight_time = flight.thoiGianKhoiHanh %}
+            {% set current_time = current_time %}
+            {% set booking_limit_time = current_time + booking_time_limit * timedelta(hours=1) %}
+
+            {% if flight_time >= booking_limit_time %}
+                <li class="search-result-item">
+                    <p>Mã chuyến bay: <strong>{{ flight.maChuyenBay }}</strong></p>
+                    <p>Giờ khởi hành: <strong>{{ flight.thoiGianKhoiHanh }}</strong></p>
+                    <p>Đi từ: <strong>{{ from_locationname }}</strong> đến <strong>{{ to_locationname }}</strong></p>
+
+                    <a href="{{ url_for('booking', flight_id=flight.id) }}" class="search-btn-primary">Đặt vé</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</main>
+
+<footer>
+    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
+</footer>
+</body>
+</html>

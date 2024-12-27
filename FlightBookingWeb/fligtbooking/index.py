@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+
 from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
@@ -21,6 +22,26 @@ def home():
     elif current_user.is_authenticated and current_user.role==Role.ADMIN:
         return redirect("/logout")
     return render_template('index.html')  # Hiển thị trang chủ
+
+#hiển thị toàn bộ chuyến bay
+@app.route('/show_all_flights',methods=['GET','POST'])
+def show_all_flights():
+    flights = dao.show_all_flights()
+    booking_time = dao.get_current_regulation()
+    booking_time_limit = booking_time.customer_booking_time
+    current_time = datetime.now()
+
+    for flight in flights:
+        from_locationname = SanBayNameDAO.get_airport_name_by_id(flight.sanBayDi_id)
+        to_locationname = SanBayNameDAO.get_airport_name_by_id(flight.sanBayDen_id)
+
+
+
+    return render_template("show_all_flights.html",flights=flights,from_locationname=from_locationname,
+                                                                    to_locationname=to_locationname,
+                                                                    timedelta=timedelta,
+                                                                    booking_time_limit=booking_time_limit,
+                                                                    current_time=current_time)
 
 # Trang Đặt vé
 @app.route('/search', methods=['GET', 'POST'])
@@ -80,17 +101,18 @@ def booking(flight_id):
         seats = dao.get_seats_by_maChuyenBay(flight.maChuyenBay)
 
     if request.method == 'POST':
-        # Get form data: passenger's name, email, and selected seat
         name = request.form['name']
         email = request.form['email']
         selected_seat = request.form['selected_seat']
+        soDienThoai = request.form['soDienThoai']
+        soCMND = request.form['soCMND']
 
         # Find the price for the selected seat
         price = dao.get_ticket_price_by_seat_number(selected_seat)
 
         if price is not None:
             # You can then proceed with ticket creation or other processes like payment
-            return render_template('payment.html', flight=flight, name=name, email=email, selected_seat=selected_seat, price=price)
+            return render_template('payment.html', flight=flight, name=name, email=email, selected_seat=selected_seat, price=price, soCMND=soCMND,soDienThoai=soDienThoai)
 
         #hiện lỗi
         err_msg = "Ghế bạn chọn không hợp lệ hoặc đã được bán."
@@ -104,24 +126,42 @@ def booking(flight_id):
 def payment(flight_id):
     price = request.form.get('price', '0')
 
+
     # Lấy dữ liệu từ form
     name = request.form.get("name")
     email = request.form.get("email")
+    soDienThoai = request.form.get("soDienThoai")
+    soCMND = request.form.get("soCMND")
+    selected_seat = request.form.get("selected_seat")
     maChuyenBay = request.form.get("maChuyenBay")
 
-    return render_template('order.html', price=price, name=name, email= email,maChuyenBay=maChuyenBay)
+    return render_template('order.html', price=price, name=name, email= email,maChuyenBay=maChuyenBay, soDienThoai=soDienThoai, soCMND=soCMND,selected_seat=selected_seat)
 
 
 
 @app.route("/order/<flight_id>", methods=["POST"])
 def order(flight_id):
-    # Lấy totalPrice từ form
+
     apptransid = dao.generate_apptransid()
     price = request.form.get('price')
     name = request.form.get('name')
     email = request.form.get('email')
+    soDienThoai = request.form.get('soDienThoai')
+    soCMND = request.form.get('soCMND')
     maChuyenBay = request.form.get('maChuyenBay')
-    dao.save_tmp_customer_info(apptransid,name,email,maChuyenBay)
+    selected_seat=request.form.get('selected_seat')
+
+    session['customer_info'] = {
+        'apptransid': apptransid,
+        'name': name,
+        'email': email,
+        'soDienThoai': soDienThoai,
+        'soCMND': soCMND,
+        'selected_seat': selected_seat,
+        'maChuyenBay': maChuyenBay,
+        'price' : price
+    }
+    # dao.save_tmp_customer_info(apptransid,name,email,soDienThoai,soCMND,selected_seat,maChuyenBay,price)
 
     redirect_url = "http://127.0.0.1:5000/callback"
     if not price:
@@ -136,37 +176,52 @@ def order(flight_id):
         # Nếu có lỗi, hiển thị thông báo lỗi
         return pay_url
 
+
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     result = request.args  # Retrieve parameters from the ZaloPay callback
-
-    apptransid = result.get("apptransid")
     status = result.get("status")
-    customer_info = dao.get_tmp_customer_info(apptransid)
+    customer_info = session.get('customer_info')
 
-    if status == "1":  # Payment successful
+    if status == "1" and customer_info:
         try:
-            # Lưu thông tin khách hàng vào session
-            session['customer_info'] = {
-                'apptransid': customer_info.apptransid,
-                'name': customer_info.name,
-                'email': customer_info.email,
-                'maChuyenBay': customer_info.maChuyenBay
-            }
-            dao.send_email(customer_info.email, "Test","Gửi email test")
 
-            return redirect(url_for('booking_results',))
-        except ValueError as e:
-            return f"Error: {e}", 400
-    else:
-        return "Payment failed! Please try again.", 400
+            # Create ticket
+            ticket = dao.create_ticket(
+                customer_info['maChuyenBay'],
+                customer_info['name'],
+                customer_info['soCMND'],
+                customer_info['soDienThoai'],
+                customer_info['email'],
+                customer_info['price'],
+                customer_info['selected_seat']
+            )
+            # Update seat status to 'sold'
+            dao.update_seat_status(
+                customer_info['selected_seat'],
+                'sold',
+                customer_info['maChuyenBay']
+            )
 
+            # Redirect to booking results page
+            return redirect(url_for('booking_results'))
+
+        except Exception as e:
+            # Log the error with a detailed message
+            app.logger.error(f"Error during callback processing: {e}")
+            return "Error processing your request. Please try again later.", 500
+
+    # Log if payment status is not successful or customer info is missing
+    app.logger.warning("Payment failed or invalid callback data.")
+    return "Payment failed or invalid callback data.", 400
 
 
 @app.route("/booking_results")
 def booking_results():
     customer_info = session.get('customer_info')
     if customer_info:
+        to_email=customer_info['email']
+        dao.send_email(to_email, customer_info)
         return render_template('booking_results.html', customer_info=customer_info)
     else:
         return "Thông tin không hợp lệ.", 400
@@ -253,6 +308,7 @@ def employee_sell_ticket():
         name = request.form.get('name')
         soCMND = request.form.get('id_card')
         soDienThoai = request.form.get('phone')
+        email = request.form.get('email')
         price = int(request.form.get('price'))
         selected_seat = request.form.get('seat_selected')  # Lấy ghế đã chọn từ form
 
@@ -273,9 +329,21 @@ def employee_sell_ticket():
 
         try:
             # Tạo vé
-            ticket = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, price, selected_seat)
+            ticket = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai,email, price, selected_seat)
             dao.update_seat_status(selected_seat, 'sold',ma_chuyen_bay)
             ghe= dao.get_seat_by_number_maChuyenBay(selected_seat, ma_chuyen_bay)
+
+            # Gửi email xác nhận
+            customer_info = {
+                'name': name,
+                'maChuyenBay': ma_chuyen_bay,
+                'selected_seat': selected_seat,
+                'price': price,
+                'soDienThoai': soDienThoai,
+                'email': email
+            }
+            dao.send_email(email, customer_info)
+
             return render_template('employee/employee_sell_ticket_result.html', ticket=ticket,ghe=ghe)
         except Exception as e:
             print(f"Error creating ticket: {e}")
@@ -306,7 +374,8 @@ def get_seats():
 def employee_flight_search():
         if request.method == 'POST':
             maChuyenBay = request.form.get("maChuyenBay")
-            flight = dao.employee_search_flights_by_maChuyenBay(maChuyenBay)
+            thoiGianKhoiHanh = request.form.get("search_time_flight")
+            flight = dao.employee_search_flights_by_maChuyenBay_thoiGianBay(maChuyenBay,thoiGianKhoiHanh)
             airport = dao.get_TuyenBay_by_maChuyenBay(maChuyenBay)
             seats = dao.count_available_seats(maChuyenBay)
 

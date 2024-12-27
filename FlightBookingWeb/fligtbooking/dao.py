@@ -1,8 +1,13 @@
 import hashlib
 import json
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from sqlalchemy.orm import aliased
 
 from fligtbooking.models import TuyenBay, SanBay, ChuyenBay, User, Seat, HangGhe, TicketType, HanhKhach, VeMayBay, \
-    Regulation, SanBayTrungGian, TmpCustomerInfo
+    Regulation, SanBayTrungGian
 from fligtbooking import db, app
 
 #Code lấy sân bay để hiển thị
@@ -22,6 +27,24 @@ def get_flight(flight_id):
         return flight
     else:
         return None
+
+
+def show_all_flights():
+    # Truy vấn lấy thông tin chuyến bay và chỉ lấy ID sân bay đi, sân bay đến
+    flights = db.session.query(
+        ChuyenBay.id,
+        ChuyenBay.maChuyenBay,  # Mã chuyến bay
+        ChuyenBay.thoiGianKhoiHanh,  # Thời gian khởi hành
+        ChuyenBay.thoiGianDen,  # Thời gian đến
+        TuyenBay.maTuyenBay,  # Mã tuyến bay
+        TuyenBay.sanBayDi_id,  # ID sân bay đi
+        TuyenBay.sanBayDen_id  # ID sân bay đến
+    ).join(
+        TuyenBay, ChuyenBay.tuyenBay_id == TuyenBay.id
+    ).all()
+
+    return flights
+
 
 
 def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, flight_time, flight_duration, intermediate_airports, seats_info):
@@ -103,6 +126,7 @@ def add_flight_schedule(flight_id, departure_airport_id, arrival_airport_id, fli
         db.session.commit()
 
 
+
 from sqlalchemy import func
 
 def customter_search_flights(from_location=None, to_location=None, departure_date=None, return_date=None, passengers=None):
@@ -150,10 +174,12 @@ def customter_search_flights(from_location=None, to_location=None, departure_dat
     return query.all()
 
 
-def employee_search_flights_by_maChuyenBay(maChuyenBay):
+def employee_search_flights_by_maChuyenBay_thoiGianBay(maChuyenBay=None, thoiGianKhoiHanh=None):
     query = db.session.query(ChuyenBay)
     if maChuyenBay:
         query = query.filter(ChuyenBay.maChuyenBay == maChuyenBay)
+    if thoiGianKhoiHanh:
+        query = query.filter(ChuyenBay.thoiGianKhoiHanh==thoiGianKhoiHanh)
     return query.all()
 
 
@@ -179,18 +205,21 @@ import hmac
 import time
 import requests
 
-def get_tmp_customer_info(apptransid):
-    return TmpCustomerInfo.query.filter_by(apptransid=apptransid).first()
-
-def save_tmp_customer_info(apptransid, name, email, maChuyenBay):
-    tmp_customer_info = TmpCustomerInfo(
-        apptransid=apptransid,
-        name=name,
-        email=email,
-        maChuyenBay=maChuyenBay,
-    )
-    db.session.add(tmp_customer_info)
-    db.session.commit()
+# def get_tmp_customer_info(apptransid):
+#     return TmpCustomerInfo.query.filter_by(apptransid=apptransid).first()
+#
+# def save_tmp_customer_info(apptransid, name, email,soDienThoai,soCMND,selected_seat, maChuyenBay):
+#     tmp_customer_info = TmpCustomerInfo(
+#         apptransid=apptransid,
+#         name=name,
+#         email=email,
+#         soDienThoai=soDienThoai,
+#         soCMND=soCMND,
+#         selected_seat=selected_seat,
+#         maChuyenBay=maChuyenBay,
+#     )
+#     db.session.add(tmp_customer_info)
+#     db.session.commit()
 
 def  generate_apptransid():
     app_time = str(int(time.time() * 1000))
@@ -347,22 +376,32 @@ def get_chuyenbay_by_maChuyenBay(ma_chuyen_bay):
     return ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
 
 
-#email
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+# email
+def send_email(to_email, customer_info):
+    subject = "Xác Nhận Đặt Chuyến Bay"
+    body = f"""
+    Chào {customer_info['name']},
+    
+    Chúng tôi xin thông báo rằng bạn đã mua vé máy bay thành công.
+    Thông tin chuyến bay:
+    - Mã chuyến bay: {customer_info['maChuyenBay']}
+    - Ghế đã chọn: {customer_info['selected_seat']}
+    - Tổng giá vé: {customer_info['price']} VND
+    - Số điện thoại: {customer_info['soDienThoai']}
+    - Email: {customer_info['email']}
 
-def send_email(to_email, subject, body):
+    Chúng tôi sẽ liên hệ với bạn qua email hoặc số điện thoại nếu có bất kỳ thay đổi nào.
+
+    Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!
+    Trân trọng,
+    """
     from_email = 'nguyenlethanhthang@gmail.com'
     password = 'rudd yixj kljq ismb'  # Thay bằng mật khẩu ứng dụng mới
-
     msg = MIMEMultipart()
     msg['From'] = from_email
     msg['To'] = to_email
     msg['Subject'] = subject
-
     msg.attach(MIMEText(body, 'plain'))
-
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
@@ -370,7 +409,6 @@ def send_email(to_email, subject, body):
         text = msg.as_string()
         server.sendmail(from_email, to_email, text)
         server.quit()
-
         print('Email đã được gửi thành công!')
     except Exception as e:
         print(f'Có lỗi xảy ra: {e}')

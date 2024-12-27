@@ -135,7 +135,7 @@ class HanhKhach(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     hanhKhach_id = Column(String(50), nullable=False,unique=True)
     tenHanhKhach = Column(String(50), nullable=False)
-    soCMND = Column(Integer, nullable=False)
+    soCMND = Column(String(20), nullable=False)
     soDienThoai = Column(Integer, nullable=False)
     email = Column(String(50), nullable=False)
     @staticmethod
@@ -187,14 +187,17 @@ class Regulation(db.Model):
     ticket_classes = db.Column(db.String(500),nullable=False, default="[]")
 
 
-class TmpCustomerInfo(db.Model):
-    __tablename__ = 'tmp_customer_info'
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    apptransid = Column(db.String(500), nullable=False)
-    name = db.Column(db.String(50),nullable=False)
-    email = db.Column(db.String(50),nullable=False)
-    maChuyenBay = db.Column(db.String(50),nullable=False)
-
+# class TmpCustomerInfo(db.Model):
+#     __tablename__ = 'tmp_customer_info'
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     apptransid = Column(db.String(500), nullable=False)
+#     name = db.Column(db.String(50),nullable=False)
+#     email = db.Column(db.String(50),nullable=False)
+#     soDienThoai = db.Column(Integer,nullable=False)
+#     soCMND = db.Column(Integer, nullable=False)
+#     gheDaChon = db.Column()
+#     maChuyenBay = db.Column(db.String(50),nullable=False)
+#
 
 # Tạo cơ sở dữ liệu và thêm sân bay mặc định
 if __name__ == "__main__":
