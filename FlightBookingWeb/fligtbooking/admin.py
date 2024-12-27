@@ -3,14 +3,60 @@ import json
 from flask import redirect, request, flash
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
-from flask_admin.form import DateTimeField, TimeField
+from flask_admin.contrib.sqla.fields import QuerySelectField
 from flask_login import current_user, logout_user
+from markupsafe import Markup
+from wtforms.fields.choices import SelectField
+from wtforms.fields.simple import StringField
+from wtforms.validators import DataRequired
+from wtforms.widgets.core import html_params, Select
 
 from fligtbooking import app, db
-from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay
+from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay, SanBay
 
 # Cấu hình Admin trang home
 admin = Admin(app=app, name="Flight Booking", template_mode="bootstrap4")
+
+class CustomSelectWidget(Select):
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault("id", field.id)
+
+        if self.multiple:
+            kwargs["multiple"] = True
+
+        # Lấy các cờ từ field
+        flags = getattr(field, "flags", {})
+        for k in dir(flags):
+            if k in self.validation_attrs and k not in kwargs:
+                kwargs[k] = getattr(flags, k)
+
+        # Thiết lập các tham số HTML cho thẻ <select>
+        select_params = html_params(name=field.name, **kwargs)
+        html = [f"<select {select_params}>"]
+
+        if field.has_groups():
+            for group, choices in field.iter_groups():
+                optgroup_params = html_params(label=group)
+                html.append(f"<optgroup {optgroup_params}>")
+                for choice in choices:
+                    if len(choice) == 4:
+                        val, label, selected, render_kw = choice
+                        html.append(self.render_option(val, label, selected, **render_kw))
+                    elif len(choice) == 3:
+                        val, label, selected = choice
+                        html.append(self.render_option(val, label, selected))
+                html.append("</optgroup>")
+        else:
+            for choice in field.iter_choices():
+                if len(choice) == 4:
+                    val, label, selected, render_kw = choice
+                    html.append(self.render_option(val, label, selected, **render_kw))
+                elif len(choice) == 3:
+                    val, label, selected = choice
+                    html.append(self.render_option(val, label, selected))
+
+        html.append("</select>")
+        return Markup("".join(html))
 
 class MyModelView(ModelView):
     def is_accessible(self):
@@ -71,29 +117,80 @@ class AdminManageEmployeeView(MyBaseView):
         # Render file template admin_manage_employees.html từ thư mục admin
         return self.render('admin/admin_manage_employees.html')
 
-
-class AdminManagerFlightsView(MyModelView):
-    column_list = ["maChuyenBay","thoiGianKhoiHanh", "thoiGianDen","thoiGianBay"]
+class AdminManagerFlightsView(ModelView):
+    column_labels = {
+        'id': 'ID Chuyến Bay',
+        'maChuyenBay': 'Mã Chuyến Bay',
+        'thoiGianKhoiHanh': 'Thời Gian Khởi Hành',
+        'thoiGianDen': 'Thời Gian Đến',
+        'thoiGianBay': 'Thời Gian Bay',
+        'tuyenBay_id': 'Tuyến Bay ID'
+    }
+    column_list = ["maChuyenBay", "thoiGianKhoiHanh", "thoiGianDen", "thoiGianBay", "tuyenBay_id"]
     column_searchable_list = ["id", "maChuyenBay"]
     column_filters = ["id", "maChuyenBay"]
     can_export = True
 
+    form_extra_fields = {
+        'maChuyenBay': StringField('Mã chuyến bay', validators=[DataRequired()]),
+
+        'tuyenBay_id': QuerySelectField(
+            'Tuyến bay',
+            query_factory=lambda: TuyenBay.query.all(),
+            get_label='maTuyenBay',
+            allow_blank=False,
+            widget=CustomSelectWidget()
+        )
+    }
+
+    def on_model_change(self, form, model, is_created):
+        if form.tuyenBay_id.data:
+            model.tuyenBay_id = form.tuyenBay_id.data.id  # Lấy id của TuyenBay thay vì đối tượng
+        return super().on_model_change(form, model, is_created)
+
+
 class AdminManagerRoutesView(MyModelView):
+    column_labels = {
+        'id': 'ID Tuyến Bay',
+        'maTuyenBay': 'Mã Chuyến Bay',
+        'sanBayDi_id': 'Sân Bay Đi ID',
+        'sanBayDen_id': 'Sân Bay Đến ID',
+        'soChuyenBay': 'Số Chuyến Bay',
+        'maSanBay': 'Mã Sân Bay',
+    }
     column_list = ["maTuyenBay", "sanBayDi_id", "sanBayDen_id", "soChuyenBay"]
     column_searchable_list = ["id", "maTuyenBay"]
     column_filters = ["id", "maTuyenBay"]
     can_export = True
+    form_extra_fields = {
+        'maTuyenBay': StringField('Mã Tuyến Bay', validators=[DataRequired()]),
+        'sanBayDi_id': QuerySelectField(
+            'Sân Bay Đi',
+            query_factory=lambda: SanBay.query.all(),
+            get_label='maSanBay',
+            allow_blank=False,
+            widget=CustomSelectWidget()
+        ),
+        'sanBayDen_id': QuerySelectField(
+            'Sân Bay Đến',
+            query_factory=lambda: SanBay.query.all(),
+            get_label='maSanBay',
+            allow_blank=False,
+            widget=CustomSelectWidget()
+        )
+    }
+    def on_model_change(self, form, model, is_created):
+        if form.sanBayDi_id.data:
+            model.sanBayDi_id = form.sanBayDi_id.data.id
+        if form.sanBayDen_id.data:
+            model.sanBayDen_id = form.sanBayDen_id.data.id
+        return super().on_model_change(form, model, is_created)
 
 class AdminReportStatisticsView(MyBaseView):
     @expose('/')
     def index(self):
         return self.render('admin/admin_report_statistics.html')
 
-
-# class StatsView(MyBaseView):
-#     @expose('/')
-#     def index(self):
-#         return self.render('admin/stats.html')
 
 
 class LogoutView(MyBaseView):
@@ -109,3 +206,5 @@ admin.add_view(AdminManagerFlightsView(ChuyenBay,db.session,name="Quản lý chu
 admin.add_view(AdminManagerRoutesView(TuyenBay,db.session,name="Quản lý tuyến bay"))
 admin.add_view(AdminReportStatisticsView(name="Thống kê báo cáo", endpoint="admin_report_statistics"))
 admin.add_view(LogoutView(name="Đăng xuất"))
+
+
