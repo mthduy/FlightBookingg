@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from flask_login import logout_user, login_user, current_user
+from sqlalchemy.testing.util import total_size
 from wtforms.validators import email
 import cloudinary.uploader
 import dao
@@ -113,15 +114,14 @@ def booking(flight_id):
             return render_template('booking.html', flight=flight, seats=seats, err_msg=err_msg)
 
         # Find the price for the selected seat
-        price = dao.get_ticket_price_by_seat_number(selected_seat)
-        if price is not None:
-
-            return render_template('payment.html', flight=flight, name=name, email=email,
-                                   selected_seat=selected_seat, price=price,
+        # price = dao.get_ticket_price_by_seat_number(selected_seat)
+        # if price is not None:
+        return render_template('payment.html', flight=flight, name=name, email=email,
+                                   selected_seat=selected_seat,
                                        soCMND=soCMND, soDienThoai=soDienThoai,total_price=total_price)
-
-        err_msg = "Đã xảy ra lỗi trong quá trình đặt vé. Vui lòng thử lại."
-        return render_template('booking.html', flight=flight, seats=seats, err_msg=err_msg)
+    #
+    # err_msg = "Đã xảy ra lỗi trong quá trình đặt vé. Vui lòng thử lại."
+    # return render_template('booking.html', flight=flight, seats=seats, err_msg=err_msg)
 
     # Render booking page for GET request
     return render_template('booking.html', flight=flight, seats=seats)
@@ -201,7 +201,7 @@ def callback():
                 customer_info['soCMND'],
                 customer_info['soDienThoai'],
                 customer_info['email'],
-                customer_info['price'],
+                customer_info['total_price'],
                 customer_info['selected_seat']
             )
             # Update seat status to 'sold'
@@ -316,7 +316,8 @@ def employee():
 def employee_sell_ticket():
     err_msg = None
     seats = dao.get_all_seats()
-    thoiGianBay = None  # Default to None
+    total_price = None  # Khởi tạo total_price mặc định là None
+
     if request.method == 'POST':
         # Lấy dữ liệu từ form
         ma_chuyen_bay = request.form.get('flight')
@@ -326,7 +327,7 @@ def employee_sell_ticket():
         email = request.form.get('email')
         price = request.form.get('price')
         selected_seat = request.form.get('seat_selected')  # Lấy ghế đã chọn từ form
-
+        soGioBay = request.form.get('hour')  # Số giờ bay
         regulation = dao.get_current_regulation()
         employee_sale_time = regulation.employee_sale_time
         flight = dao.get_chuyenbay_by_maChuyenBay(ma_chuyen_bay)
@@ -335,6 +336,33 @@ def employee_sell_ticket():
         sale_deadline = thoiGianKhoiHanh - timedelta(hours=employee_sale_time)
         current_time = datetime.now()
 
+        # Kiểm tra giá trị price và soGioBay
+        try:
+            price = float(price)
+        except ValueError:
+            err_msg = "Giá vé không hợp lệ."
+            return render_template('employee/employee_sell_ticket.html',
+                                   flights=dao.get_all_flights(),
+                                   seats=seats,
+                                   err_msg=err_msg,
+                                   total_price=total_price)
+
+        # Tính số phút từ thời gian bay
+        soGioBay_minutes = dao.get_flight_duration_in_minutes(soGioBay)
+
+        # Kiểm tra giá trị soGioBay_minutes
+        if soGioBay_minutes is None or soGioBay_minutes <= 0:
+            err_msg = "Số giờ bay không hợp lệ."
+            return render_template('employee/employee_sell_ticket.html',
+                                   flights=dao.get_all_flights(),
+                                   seats=seats,
+                                   err_msg=err_msg,
+                                   total_price=total_price)
+
+        # Tính tổng tiền = giá vé * số phút bay
+        total_price = price * soGioBay_minutes
+        print(f"Price: {price}, Flight duration (in minutes): {soGioBay_minutes}, Total price: {total_price}")
+
         # Kiểm tra thời gian bán vé
         if current_time > sale_deadline:
             err_msg = f"Nhân viên chỉ được phép bán vé trước {employee_sale_time} giờ."
@@ -342,18 +370,19 @@ def employee_sell_ticket():
                                    flights=dao.get_all_flights(),
                                    seats=seats,
                                    err_msg=err_msg,
-                                   thoiGianBay=thoiGianBay)  # Pass `thoiGianBay` to the template
+                                   total_price=total_price)  # Truyền total_price vào template
 
         try:
             # Tạo vé
-            ticket, err_msg = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, email, price, selected_seat)
+            ticket, err_msg = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, email, total_price, selected_seat)
 
             if err_msg:
                 return render_template('employee/employee_sell_ticket.html',
                                        flights=dao.get_all_flights(),
                                        seats=seats,
                                        err_msg=err_msg,
-                                       thoiGianBay=thoiGianBay)
+                                       total_price=total_price)  # Truyền total_price vào template
+
             dao.update_seat_status(selected_seat, 'sold', ma_chuyen_bay)
             ghe = dao.get_seat_by_number_maChuyenBay(selected_seat, ma_chuyen_bay)
 
@@ -362,28 +391,28 @@ def employee_sell_ticket():
                 'name': name,
                 'maChuyenBay': ma_chuyen_bay,
                 'selected_seat': selected_seat,
-                'price': price,
+                'price': total_price,
                 'soDienThoai': soDienThoai,
                 'email': email
             }
             dao.send_email(email, customer_info)
 
-            return render_template('employee/employee_sell_ticket_result.html', ticket=ticket, ghe=ghe)
+            return render_template('employee/employee_sell_ticket_result.html',
+                                   ticket=ticket,
+                                   ghe=ghe,
+                                   total_price=total_price)  # Truyền total_price vào result template
 
         except Exception as e:
             err_msg = "Lỗi không thể in vé"
 
     # Hiển thị danh sách chuyến bay
     flights = dao.get_all_flights()
-    if 'flight' in request.args:
-        ma_chuyen_bay = request.args.get('flight')
-        thoiGianBay = dao.get_thoiGianBay_by_maChuyenBay(ma_chuyen_bay)  # Get thoiGianBay dynamically
 
     return render_template('employee/employee_sell_ticket.html',
                            flights=flights,
                            seats=seats,
                            err_msg=err_msg,
-                           thoiGianBay=thoiGianBay)  # Pass thoiGianBay to the template
+                           total_price=total_price)  # Truyền total_price vào template
 
 @app.route('/api/get_flight_duration', methods=['GET'])
 def get_flight_duration():

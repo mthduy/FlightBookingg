@@ -1,6 +1,7 @@
 import hashlib
 import json
 import smtplib
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -28,7 +29,14 @@ def get_flight(flight_id):
     else:
         return None
 
-
+# Convert flight_time (hh:mm:ss) to total minutes
+def get_flight_duration_in_minutes(flight_time):
+    try:
+        flight_time_obj = datetime.strptime(flight_time, "%H:%M:%S")
+        total_minutes = flight_time_obj.hour * 60 + flight_time_obj.minute
+        return total_minutes
+    except Exception as e:
+        return 0
 
 def show_all_flights():
     # Truy vấn lấy thông tin chuyến bay và chỉ lấy ID sân bay đi, sân bay đến
@@ -364,21 +372,6 @@ def get_all_seats():
     return Seat.query.all()
 
 
-# Hàm lấy thông tin ghế và giá vé
-def get_ticket_price_by_seat_number(seat_number):
-    # Lấy ghế từ CSDL dựa trên seat_number
-    seat = db.session.query(Seat).filter(Seat.seat_number == seat_number).first()
-
-    if seat:
-        # Lấy thông tin loại vé (TicketType) từ ghế
-        ticket_type = seat.ticketType
-        if ticket_type:
-            # Trả về giá vé
-            return ticket_type.giaTien
-        else:
-            return None  # Trả về None nếu không tìm thấy loại vé
-    else:
-        return None  # Trả về None nếu không tìm thấy ghế
 
 def get_seats_by_maChuyenBay(maChuyenBay):
     # Lấy tất cả các ghế ngồi của chuyến bay có maChuyenBay

@@ -1,83 +1,3 @@
-<!--<!DOCTYPE html>-->
-<!--<html lang="en">-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
-<!--    <title>Bán vé - TravelSky</title>-->
-<!--    <link rel="stylesheet" href="/static/css/styles.css">-->
-<!--    <link rel="stylesheet" href="/static/css/employeestyles.css">-->
-<!--    <script src="/static/javascript/script.js"></script>-->
-<!--</head>-->
-<!--<body>-->
-
-<!--<header class="navbar">-->
-<!--    <a href="/" class="logo">TravelSky</a>-->
-<!--        <nav class="menu">-->
-<!--            <a href="/logout" class="btn-primary">Đăng xuất</a>-->
-<!--        </nav>-->
-<!--</header>-->
-
-<!--<main class="main-container">-->
-<!--    <div class="_sidebar">-->
-<!--        <ul class="menu-list">-->
-<!--            <li><a href="/employee_sell_ticket" class="menu-item">Bán vé</a></li>-->
-<!--            <li><a href="/employee_flight_search" class="menu-item">Tra cứu chuyến bay</a></li>-->
-<!--            <li><a href="/employee_schedule_flight" class="menu-item">Lập lịch chuyến bay</a></li>-->
-<!--        </ul>-->
-<!--    </div>-->
-
-<!--    <div class="sell_ticket_content">-->
-<!--        <h2>Bán vé</h2>-->
-<!--        <form method="POST" action="/employee_sell_ticket">-->
-<!--            <label for="flight">Chọn chuyến bay:</label>-->
-<!--            <select id="flight" name="flight" required>-->
-<!--                 <option value="" disabled selected>Chọn chuyến bay</option>-->
-<!--                {% for flight in flights %}-->
-<!--                 <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>-->
-<!--                {% endfor %}-->
-<!--            </select>-->
-
-<!--            <label for="name">Họ tên:</label>-->
-<!--            <input type="text" id="name" name="name" required>-->
-
-<!--            <label for="id_card">CMND/CCCD:</label>-->
-<!--            <input type="text" id="id_card" name="id_card" required>-->
-
-<!--            <label for="phone">Điện thoại:</label>-->
-<!--            <input type="tel" id="phone" name="phone" required>-->
-
-<!--            <label for="email">email:</label>-->
-<!--            <input type="email" id="email" name="email" required>-->
-
-<!--             <label for="seat_map">Sơ đồ ghế:</label>-->
-<!--            <div id="seat_map" data-thoi-gian-bay="{{thoiGianBay}}" ></div>-->
-
-
-<!--        &lt;!&ndash; Input ẩn để gửi số ghế đã chọn &ndash;&gt;-->
-<!--        <input type="hidden" id="seat_selected" name="seat_selected">-->
-
-
-
-<!--            <label for="price">Giá tiền:</label>-->
-<!--            <input type="text" id="price" name="price" readonly>-->
-<!--            <label for="total_price">Tổng tền:</label>-->
-<!--            <input type="text" id="total_price" name="total_price" readonly>-->
-
-<!--            {%if err_msg%}-->
-<!--            <div class="alert alert-danger">{{err_msg}}</div>-->
-<!--            {%endif%}-->
-<!--            <button type="submit" class="btn-primary">In vé bán</button>-->
-
-<!--        </form>-->
-<!--    </div>-->
-<!--</main>-->
-
-<!--<footer>-->
-<!--    <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>-->
-<!--</footer>-->
-
-<!--</body>-->
-<!--</html>-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,7 +33,7 @@
             <select id="flight" name="flight" required>
                 <option value="" disabled selected>Chọn chuyến bay</option>
                 {% for flight in flights %}
-                    <option value="{{ flight.maChuyenBay }}">{{ flight.maChuyenBay }}</option>
+                    <option value="{{ flight.maChuyenBay }}" data-hour="{{ flight.thoiGianBay }}" data-price="{{ flight.ticket_types[0].giaTien }}">{{ flight.maChuyenBay }}</option>
                 {% endfor %}
             </select>
 
@@ -130,7 +50,7 @@
             <input type="email" id="email" name="email" required>
 
             <label for="seat_map">Sơ đồ ghế:</label>
-            <div id="seat_map" data-thoi-gian-bay="{{thoiGianBay}}"></div>
+            <div id="seat_map" ></div>
 
             <!-- Input ẩn để gửi số ghế đã chọn -->
             <input type="hidden" id="seat_selected" name="seat_selected">
@@ -155,6 +75,38 @@
 <footer>
     <p>© 2024 TravelSky - Đặt vé máy bay dễ dàng và nhanh chóng</p>
 </footer>
+
+<script>
+    // When a flight is selected, update the hour and price fields
+    document.getElementById('flight').addEventListener('change', function() {
+        var selectedOption = this.options[this.selectedIndex];
+        var flightHour = selectedOption.getAttribute('data-hour');
+        var price = selectedOption.getAttribute('data-price');
+
+        // Display the flight hour and price
+        document.getElementById('hour').value = flightHour;
+        document.getElementById('price').value = price;
+
+        // Calculate the total price
+        calculateTotalPrice();
+    });
+
+    // Function to calculate the total price
+    function calculateTotalPrice() {
+        var hour = document.getElementById('hour').value;
+        var price = document.getElementById('price').value;
+
+        // Check if both hour and price are available
+        if (hour && price) {
+            var hourParts = hour.split(':'); // Split the hour in hh:mm:ss format
+            var totalMinutes = parseInt(hourParts[0]) * 60 + parseInt(hourParts[1]); // Convert to minutes
+            var totalPrice = totalMinutes * price; // Assuming total price is proportional to the time in minutes
+
+            // Update the total price field
+            document.getElementById('total_price_sell').value = totalPrice;
+        }
+    }
+</script>
 
 </body>
 </html>
