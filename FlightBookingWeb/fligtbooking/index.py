@@ -385,6 +385,21 @@ def employee_sell_ticket():
                            err_msg=err_msg,
                            thoiGianBay=thoiGianBay)  # Pass thoiGianBay to the template
 
+@app.route('/api/get_flight_duration', methods=['GET'])
+def get_flight_duration():
+    ma_chuyen_bay = request.args.get('flight')
+    if not ma_chuyen_bay:
+        return jsonify({'success': False, 'message': 'Mã chuyến bay không hợp lệ'})
+
+    flight = dao.get_thoiGianBay_by_maChuyenBay(ma_chuyen_bay)
+    if flight:
+        # Kiểm tra và trả về thời gian bay (thoiGianBay) dưới dạng chuỗi
+        thoiGianBay = flight.thoiGianBay.strftime('%H:%M:%S')  # Chuyển sang định dạng string
+        return jsonify({'success': True, 'thoiGianBay': thoiGianBay})
+    else:
+        # Trả về thông báo lỗi nếu không tìm thấy chuyến bay
+        return jsonify({'success': False, 'message': 'Chuyến bay không tồn tại'})
+
 
 @app.route('/api/seats')
 def get_seats():

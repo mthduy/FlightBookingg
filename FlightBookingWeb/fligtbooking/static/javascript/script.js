@@ -79,40 +79,40 @@
 //            .catch(error => console.error('Error loading seat map:', error));  // Xử lý lỗi nếu có
 //    });
 //});
-//function generateTicketClasses() {
-//        const count = document.getElementById('ticket-class-count').value;
-//        const tbody = document.getElementById('ticket-classes-body');
-//        tbody.innerHTML = '';
-//
-//        for (let i = 1; i <= count; i++) {
-//            const row = document.createElement('tr');
-//            row.innerHTML = `
-//                <td><input type="text" name="class-${i}" value=" ${i}" readonly></td>
-//                <td><input type="number" name="price-${i}" placeholder="Nhập đơn giá" required></td>
-//                <td>
-//                    <input type="number" name="count-${i}" placeholder="Nhập số ghế (phải >= 6 và chia hết cho 6)" required>
-//                    <div class="error-message" id="error-message-${i}" style="color: red; display: none;">Số lượng ghế phải > 6 và chia hết cho 6</div>
-//                </td>
-//            `;
-//            tbody.appendChild(row);
-//
-//            const countInput = row.querySelector(`input[name="count-${i}"]`);
-//            const errorMessage = row.querySelector(`#error-message-${i}`);
-//
-//            countInput.addEventListener('input', function () {
-//                const countValue = parseInt(countInput.value);
-//
-//                if (countValue < 6 || countValue % 6 !== 0) {
-//                    errorMessage.style.display = 'block';
-//                    countInput.setCustomValidity('Số lượng ghế phải >= 6 và chia hết cho 6');
-//                } else {
-//                    errorMessage.style.display = 'none';
-//                    countInput.setCustomValidity('');
-//                }
-//            });
-//        }
-//}
-//
+function generateTicketClasses() {
+        const count = document.getElementById('ticket-class-count').value;
+        const tbody = document.getElementById('ticket-classes-body');
+        tbody.innerHTML = '';
+
+        for (let i = 1; i <= count; i++) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" name="class-${i}" value=" ${i}" readonly></td>
+                <td><input type="number" name="price-${i}" placeholder="Nhập đơn giá" required></td>
+                <td>
+                    <input type="number" name="count-${i}" placeholder="Nhập số ghế (phải >= 6 và chia hết cho 6)" required>
+                    <div class="error-message" id="error-message-${i}" style="color: red; display: none;">Số lượng ghế phải > 6 và chia hết cho 6</div>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            const countInput = row.querySelector(`input[name="count-${i}"]`);
+            const errorMessage = row.querySelector(`#error-message-${i}`);
+
+            countInput.addEventListener('input', function () {
+                const countValue = parseInt(countInput.value);
+
+                if (countValue < 6 || countValue % 6 !== 0) {
+                    errorMessage.style.display = 'block';
+                    countInput.setCustomValidity('Số lượng ghế phải >= 6 và chia hết cho 6');
+                } else {
+                    errorMessage.style.display = 'none';
+                    countInput.setCustomValidity('');
+                }
+            });
+        }
+}
+
 //document.addEventListener('DOMContentLoaded', function () {
 //    const flightSelect = document.getElementById('flight');  // Dropdown chuyến bay
 //    const seatMap = document.getElementById('seat_map');  // Khu vực hiển thị sơ đồ ghế
@@ -296,3 +296,25 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => console.error('Error loading seat map:', error));  // Xử lý lỗi nếu có
     });
 });
+window.onload = function() {
+        // Lắng nghe sự kiện thay đổi giá trị trong dropdown (chọn chuyến bay)
+        document.getElementById('flight').addEventListener('change', function() {
+            const flightCode = this.value;  // Lấy mã chuyến bay từ dropdown
+
+            if (flightCode) {
+                // Gửi yêu cầu GET tới server để lấy thông tin thời gian bay
+                fetch(`/api/get_flight_duration?flight=${flightCode}`)
+                    .then(response => response.json())  // Chuyển đổi response thành JSON
+                    .then(data => {
+                        if (data.success) {
+                            // Gán thời gian bay vào input
+                            document.getElementById('hour').value = data.thoiGianBay;
+                        } else {
+                            // Thông báo lỗi nếu không có dữ liệu
+                            alert(data.message);
+                        }
+                    })
+                    .catch(err => console.error('Error fetching flight info:', err));  // Xử lý lỗi nếu có
+            }
+        });
+    };

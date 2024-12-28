@@ -401,14 +401,10 @@ def get_current_regulation():
 
 def get_chuyenbay_by_maChuyenBay(ma_chuyen_bay):
     return ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
+
 def get_thoiGianBay_by_maChuyenBay(ma_chuyen_bay):
     # Fetch the entire ChuyenBay object
-    flight = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
-    if flight:
-        # Return the thoiGianBay value
-        return flight.thoiGianBay
-    else:
-        return None
+    return  ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
 
 
 # email
