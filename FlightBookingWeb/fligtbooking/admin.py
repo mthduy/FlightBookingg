@@ -12,7 +12,7 @@ from wtforms.validators import DataRequired
 from wtforms.widgets.core import html_params, Select
 
 from fligtbooking import app, db
-from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay, SanBay
+from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay, SanBay, Seat
 
 # Cấu hình Admin trang home
 admin = Admin(app=app, name="Flight Booking", template_mode="bootstrap4")
@@ -117,14 +117,17 @@ class AdminManageEmployeeView(MyBaseView):
         # Render file template admin_manage_employees.html từ thư mục admin
         return self.render('admin/admin_manage_employees.html')
 
-class AdminManagerFlightsView(ModelView):
+class AdminManagerFlightsView(MyModelView):
     column_labels = {
         'id': 'ID Chuyến Bay',
         'maChuyenBay': 'Mã Chuyến Bay',
         'thoiGianKhoiHanh': 'Thời Gian Khởi Hành',
         'thoiGianDen': 'Thời Gian Đến',
         'thoiGianBay': 'Thời Gian Bay',
-        'tuyenBay_id': 'Tuyến Bay ID'
+        'tuyenBay_id': 'Mã Tuyến Bay '
+    }
+    column_formatters = {
+        'tuyenBay_id': lambda v, c, m, p: m.tuyenBay.maTuyenBay
     }
     column_list = ["maChuyenBay", "thoiGianKhoiHanh", "thoiGianDen", "thoiGianBay", "tuyenBay_id"]
     column_searchable_list = ["id", "maChuyenBay"]
@@ -145,7 +148,40 @@ class AdminManagerFlightsView(ModelView):
 
     def on_model_change(self, form, model, is_created):
         if form.tuyenBay_id.data:
-            model.tuyenBay_id = form.tuyenBay_id.data.id  # Lấy id của TuyenBay thay vì đối tượng
+            model.tuyenBay_id = form.tuyenBay_id.data.id
+
+        if is_created:
+            regulation = Regulation.query.first()
+            if regulation and regulation.ticket_classes:
+                ticket_classes = json.loads(regulation.ticket_classes)
+            else:
+                ticket_classes = []
+
+            for ticket_class in ticket_classes:
+                seats = ticket_class['count']
+                hang_ghe = ticket_class['class_name']
+                hang_ghe_format = f"Hạng {ticket_class['class_name']}"
+
+                row = 1
+                seat_letters = ['A', 'B', 'C', 'D', 'E', 'F']
+                for seat_number in range(1, seats + 1):
+                    seat_letter = seat_letters[(seat_number - 1) % len(seat_letters)]
+                    seat_number_str = f"{row}{seat_letter}"
+
+                    if seat_letter == 'F':
+                        row += 1
+
+                    seat = Seat(
+                        seat_number=seat_number_str,
+                        status="available",
+                        hang_ghe=hang_ghe_format,
+                        chuyenbay_id=model.id,
+                        ticket_type_id=hang_ghe,
+                    )
+                    db.session.add(seat)
+
+            db.session.commit()
+
         return super().on_model_change(form, model, is_created)
 
 
@@ -153,12 +189,11 @@ class AdminManagerRoutesView(MyModelView):
     column_labels = {
         'id': 'ID Tuyến Bay',
         'maTuyenBay': 'Mã Chuyến Bay',
-        'sanBayDi_id': 'Sân Bay Đi ID',
-        'sanBayDen_id': 'Sân Bay Đến ID',
-        'soChuyenBay': 'Số Chuyến Bay',
+        'sanBayDi_id': 'Sân Bay Đi ',
+        'sanBayDen_id': 'Sân Bay Đến ',
         'maSanBay': 'Mã Sân Bay',
     }
-    column_list = ["maTuyenBay", "sanBayDi_id", "sanBayDen_id", "soChuyenBay"]
+    column_list = ["maTuyenBay", "sanBayDi_id", "sanBayDen_id"]
     column_searchable_list = ["id", "maTuyenBay"]
     column_filters = ["id", "maTuyenBay"]
     can_export = True
@@ -167,17 +202,18 @@ class AdminManagerRoutesView(MyModelView):
         'sanBayDi_id': QuerySelectField(
             'Sân Bay Đi',
             query_factory=lambda: SanBay.query.all(),
-            get_label='maSanBay',
+            get_label=lambda sanBay: f"{sanBay.maSanBay} - {sanBay.tenSanBay}",
             allow_blank=False,
             widget=CustomSelectWidget()
         ),
         'sanBayDen_id': QuerySelectField(
             'Sân Bay Đến',
             query_factory=lambda: SanBay.query.all(),
-            get_label='maSanBay',
+            get_label=lambda sanBay: f"{sanBay.maSanBay} - {sanBay.tenSanBay}",
             allow_blank=False,
             widget=CustomSelectWidget()
         )
+
     }
     def on_model_change(self, form, model, is_created):
         if form.sanBayDi_id.data:
@@ -185,6 +221,20 @@ class AdminManagerRoutesView(MyModelView):
         if form.sanBayDen_id.data:
             model.sanBayDen_id = form.sanBayDen_id.data.id
         return super().on_model_change(form, model, is_created)
+# Tùy chỉnh cách hiển thị tên sân bay trong bảng
+    column_formatters = {
+        'sanBayDi_id': lambda v, c, m, p: f"{m.sanBayDi.maSanBay} - {m.sanBayDi.tenSanBay}",
+        'sanBayDen_id': lambda v, c, m, p: f"{m.sanBayDen.maSanBay} - {m.sanBayDen.tenSanBay}"
+    }
+
+    def scaffold_form(self):
+        form = super().scaffold_form()
+
+        # Thêm QuerySelectField cho Sân Bay Đi và Sân Bay Đến
+        form.sanBayDi_id.query_factory = lambda: SanBay.query.all()
+        form.sanBayDen_id.query_factory = lambda: SanBay.query.all()
+
+        return form
 
 class AdminReportStatisticsView(MyBaseView):
     @expose('/')

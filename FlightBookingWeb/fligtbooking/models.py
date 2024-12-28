@@ -1,4 +1,5 @@
 import enum
+import json
 
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Time, Boolean, event, update
@@ -39,7 +40,7 @@ class TuyenBay(db.Model):
     # Mối quan hệ
     sanBayDi = relationship("SanBay", foreign_keys=[sanBayDi_id])  # Mối quan hệ với sân bay đi
     sanBayDen = relationship("SanBay", foreign_keys=[sanBayDen_id])  # Mối quan hệ với sân bay đến
-    chuyenBays = relationship("ChuyenBay", back_populates="tuyenBay")  # Đổi tên backref
+    chuyenBays = relationship("ChuyenBay", back_populates="tuyenBay", cascade="all, delete")  # Đổi tên backref
 
 
 class ChuyenBay(db.Model):
@@ -53,7 +54,7 @@ class ChuyenBay(db.Model):
     # Tham chiếu đến bảng TuyenBay
     tuyenBay_id = Column(Integer, ForeignKey('tuyenbay.id'), nullable=False)
     # Mối quan hệ với bảng TuyenBay (Tuyến bay)
-    tuyenBay = relationship("TuyenBay", foreign_keys=[tuyenBay_id], cascade="all, delete", back_populates="chuyenBays")  # Liên kết với bảng TuyenBay
+    tuyenBay = relationship("TuyenBay", foreign_keys=[tuyenBay_id], back_populates="chuyenBays")  # Liên kết với bảng TuyenBay
     # Mối quan hệ với bảng Seat (Ghế ngồi) - Chuyến bay có nhiều ghế
     seats = relationship("Seat", back_populates="chuyenBay", cascade="all, delete")  # Liên kết với bảng ghế ngồi
     # Mối quan hệ với bảng TicketType (Loại vé) - Một chuyến bay có nhiều loại vé
@@ -184,7 +185,10 @@ class Regulation(db.Model):
     customer_booking_time = db.Column(db.Integer, nullable=False, default=12)
     employee_sale_time = db.Column(db.Integer, nullable=False, default=4)
     ticket_class_count = db.Column(db.Integer, nullable=False, default=2)
-    ticket_classes = db.Column(db.String(500),nullable=False, default="[]")
+    ticket_classes = db.Column(db.String(500),nullable=False, default=json.dumps([
+        {"class_name": "1", "price": 1000000, "count": 6},
+        {"class_name": "2", "price": 2000000, "count": 12}
+    ]))
 
 
 # class TmpCustomerInfo(db.Model):

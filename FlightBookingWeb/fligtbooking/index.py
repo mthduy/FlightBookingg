@@ -319,7 +319,7 @@ def employee_sell_ticket():
         soCMND = request.form.get('id_card')
         soDienThoai = request.form.get('phone')
         email = request.form.get('email')
-        price = int(request.form.get('price'))
+        price = request.form.get('price')
         selected_seat = request.form.get('seat_selected')  # Lấy ghế đã chọn từ form
 
         regulation = dao.get_current_regulation()
