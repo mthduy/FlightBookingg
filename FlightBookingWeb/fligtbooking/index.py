@@ -3,7 +3,7 @@ import hmac
 
 from datetime import datetime, timedelta
 
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from flask_login import logout_user, login_user, current_user
 from wtforms.validators import email
 
@@ -265,12 +265,12 @@ def process_login_admin():
     email = request.form.get('email')
     password = request.form.get('password')
     user = dao.auth_user(email=email, password=password)
-    if user and user.role==Role.ADMIN:
+    if user and user.role == Role.ADMIN:
         login_user(user)
+        return redirect(url_for('admin.index'))  # Redirect đến trang quản trị
     else:
-        err_msg = "Tài khoản hoặc mật khẩu không đúng!"
-
-    return redirect('/admin')
+        flash("Tài khoản hoặc mật khẩu không đúng !", "error")  # Thêm thông báo lỗi
+        return redirect(url_for('admin.index'))  # Redirect đến trang đăng nhập
 
 @login_manager.user_loader
 def load_user(user_id):
