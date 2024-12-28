@@ -285,40 +285,66 @@ class ZaloPayDAO:
 def get_all_flights():
     return ChuyenBay.query.all()
 
-def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai,email, price, selected_seat):
-    # Tìm chuyến bay theo mã
-    chuyen_bay = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
-    if not chuyen_bay:
-        raise ValueError("Chuyến bay không tồn tại")
 
-    existing_hanh_khach = HanhKhach.query.filter_by(soCMND=soCMND).first()
-    if existing_hanh_khach:
-        hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
-    else:
-        # Tạo hành khách mới
-        hanh_khach = HanhKhach(tenHanhKhach=tenHanhKhach, soCMND=soCMND, soDienThoai=soDienThoai, email=email)
-        db.session.add(hanh_khach)
-        db.session.flush()  # Lấy ID của hành khách vừa thêm
-
-    # Tạo vé máy bay
-    ticket = VeMayBay(
-        veMayBay_id=f"MB{hanh_khach.id:06d}",  # Sinh mã vé dựa trên ID hành khách
-        hanhKhach_id=hanh_khach.id,
-        chuyenBay_id=chuyen_bay.id,
-        email = email,
-        giaVe=price,
-        seat_number=selected_seat
-    )
-    db.session.add(ticket)
-
+def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, email, price, selected_seat):
     try:
+        # Tìm chuyến bay theo mã
+        chuyen_bay = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
+        if not chuyen_bay:
+            raise ValueError("Chuyến bay không tồn tại")
+
+        # Kiểm tra xem email đã tồn tại trong bảng User chưa
+        existing_user = User.query.filter_by(email=email).first()
+
+        if existing_user:
+            # Nếu email đã tồn tại trong bảng User, kiểm tra email trong HanhKhach
+            existing_hanh_khach = HanhKhach.query.filter_by(email=email).first()
+            if existing_hanh_khach:
+                hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
+            else:
+                # Nếu không tồn tại, tạo hành khách mới và liên kết với User.id
+                hanh_khach = HanhKhach(
+                    tenHanhKhach=tenHanhKhach,
+                    soCMND=soCMND,
+                    soDienThoai=soDienThoai,
+                    email=email,
+                    user_id=existing_user.id  # Liên kết với User.id
+                )
+                db.session.add(hanh_khach)
+                db.session.flush()  # Lấy ID của hành khách vừa thêm
+        else:
+            # Nếu không tồn tại trong bảng User, tạo hành khách mới bình thường
+            hanh_khach = HanhKhach(
+                tenHanhKhach=tenHanhKhach,
+                soCMND=soCMND,
+                soDienThoai=soDienThoai,
+                email=email
+            )
+            db.session.add(hanh_khach)
+            db.session.flush()  # Lấy ID của hành khách vừa thêm
+
+        # Tạo vé máy bay
+        ticket = VeMayBay(
+            veMayBay_id=f"MB{hanh_khach.id:06d}",  # Sinh mã vé dựa trên ID hành khách
+            hanhKhach_id=hanh_khach.id,
+            chuyenBay_id=chuyen_bay.id,
+            email=email,
+            giaVe=price,
+            seat_number=selected_seat
+        )
+        db.session.add(ticket)
+
+        # Commit vào database
         db.session.commit()
+
+        return ticket, None
+
     except Exception as e:
         db.session.rollback()
-        print(f"Lỗi khi commit: {e}")
-        raise ValueError("Không thể lưu thông tin vé.")
+        err_msg = "Email đã đăng ký"
+        return None, err_msg
 
-    return ticket
+
 
 def get_seat_by_number_maChuyenBay(seat_number,ma_chuyen_bay):
     return Seat.query.join(ChuyenBay).filter(
@@ -422,4 +448,6 @@ def send_email(to_email, customer_info):
     except Exception as e:
         print(f'Có lỗi xảy ra: {e}')
 
+def check_email_exists(email):
+    return User.query.filter_by(email=email).first() is not None
 

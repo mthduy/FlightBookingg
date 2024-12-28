@@ -15,7 +15,10 @@
 <main >
     <section class="register-form">
         <h1>Đăng ký</h1>
-        <form action="/register" method="post">
+        {%if err_msg%}
+                <div class="alert alert-danger">{{err_msg}}</div>
+            {%endif%}
+        <form action="/register" method="post" enctype="multipart/form-data">
             <label for="role">Bạn là: </label>
             <select id="role" name="role" class="select-register"required>
                 <option value="customer">Khách hàng</option>
@@ -30,6 +33,9 @@
 
             <label for="confirm-password">Xác nhận mật khẩu:</label>
             <input type="password" id="confirm-password" name="confirm-password" required placeholder="Xác nhận mật khẩu của bạn">
+
+            <label for="avatar">Ảnh đại diện</label>
+            <input type="file" class="form-control" id="avatar" name="avatar">
 
             <button type="submit" class="btn-primary">Đăng ký</button>
 

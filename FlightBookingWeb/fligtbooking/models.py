@@ -138,7 +138,12 @@ class HanhKhach(db.Model):
     tenHanhKhach = Column(String(50), nullable=False)
     soCMND = Column(String(20), nullable=False)
     soDienThoai = Column(Integer, nullable=False)
-    email = Column(String(50), nullable=False)
+    email = Column(String(50), nullable=False,unique=True)
+
+    # Thêm khóa ngoại liên kết với bảng User
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=True)
+    user = relationship('User', back_populates='hanhkhach')
+
     @staticmethod
     def generate_hanhKhach_id(tenHanhKhach, id):
         return tenHanhKhach[:3].upper() + str(id)
@@ -169,9 +174,11 @@ class User(db.Model,UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = Column(String(50), nullable=False)
     active = Column(Boolean, default=True)
-    avatar = Column(String(200),default="https://res.cloudinary.com/dq5ajyj0q/image/upload/v1734594042/admin-sign-on-laptop-icon-stock-vector_apyuxd.jpg")
+    avatar = Column(String(200),default="https://res.cloudinary.com/dq5ajyj0q/image/upload/v1735387922/1077114_aohjw8.png")
     role = db.Column(db.Enum(Role), nullable=False, default=Role.CUSTOMER)
 
+    hanhkhach = relationship('HanhKhach', back_populates='user', uselist=False,
+                             primaryjoin="and_(HanhKhach.email == User.email, HanhKhach.user_id == User.id)")
     def __str__(self):
         return f"{self.name} - {self.role.value}"
 

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from flask_login import logout_user, login_user, current_user
 from wtforms.validators import email
-
+import cloudinary.uploader
 import dao
 from select import select
 
@@ -276,25 +276,30 @@ def process_login_admin():
 def load_user(user_id):
     return dao.get_user_by_id(user_id=user_id)
 
-@app.route('/register', methods=["get", "post"])
+@app.route('/register', methods=["GET", "POST"])
 def register():
     err_msg = None
     if request.method.__eq__('POST'):
         password = request.form.get('password')
         confirm = request.form.get('confirm')
+        email = request.form.get('email')
         if password.__eq__(confirm):
-            ava_path = None
-            name = request.form.get('name')
-            email = request.form.get('email')
-            # avatar = request.files.get('avatar')
-            # if avatar:
-            #     res = cloudinary.uploader.upload(avatar)
-            #     ava_path = res['secure_url']
-            dao.add_user(name=name,email=email, password=password, avatar=ava_path)
-            return redirect('/login')
+            # Kiểm tra email đã tồn tại
+            if dao.check_email_exists(email):
+                err_msg = "Email đã được đăng ký!"
+            else:
+                ava_path = None
+                name = request.form.get('name')
+                avatar = request.files.get('avatar')
+                if avatar:
+                    res = cloudinary.uploader.upload(avatar)
+                    ava_path = res['secure_url']
+                dao.add_user(name=name, email=email, password=password, avatar=ava_path)
+                return redirect('/login')
         else:
             err_msg = "Mật khẩu không khớp!"
-    return render_template('register.html')
+    return render_template('register.html', err_msg=err_msg)
+
 
 @app.route('/logout')
 def logout():
@@ -341,7 +346,14 @@ def employee_sell_ticket():
 
         try:
             # Tạo vé
-            ticket = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, email, price, selected_seat)
+            ticket, err_msg = dao.create_ticket(ma_chuyen_bay, name, soCMND, soDienThoai, email, price, selected_seat)
+
+            if err_msg:
+                return render_template('employee/employee_sell_ticket.html',
+                                       flights=dao.get_all_flights(),
+                                       seats=seats,
+                                       err_msg=err_msg,
+                                       thoiGianBay=thoiGianBay)
             dao.update_seat_status(selected_seat, 'sold', ma_chuyen_bay)
             ghe = dao.get_seat_by_number_maChuyenBay(selected_seat, ma_chuyen_bay)
 
@@ -359,7 +371,6 @@ def employee_sell_ticket():
             return render_template('employee/employee_sell_ticket_result.html', ticket=ticket, ghe=ghe)
 
         except Exception as e:
-            print(f"Error creating ticket: {e}")
             err_msg = "Lỗi không thể in vé"
 
     # Hiển thị danh sách chuyến bay
