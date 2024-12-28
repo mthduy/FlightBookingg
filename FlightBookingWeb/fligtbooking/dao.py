@@ -29,6 +29,7 @@ def get_flight(flight_id):
         return None
 
 
+
 def show_all_flights():
     # Truy vấn lấy thông tin chuyến bay và chỉ lấy ID sân bay đi, sân bay đến
     flights = db.session.query(
@@ -374,6 +375,14 @@ def get_current_regulation():
 
 def get_chuyenbay_by_maChuyenBay(ma_chuyen_bay):
     return ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
+def get_thoiGianBay_by_maChuyenBay(ma_chuyen_bay):
+    # Fetch the entire ChuyenBay object
+    flight = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
+    if flight:
+        # Return the thoiGianBay value
+        return flight.thoiGianBay
+    else:
+        return None
 
 
 # email

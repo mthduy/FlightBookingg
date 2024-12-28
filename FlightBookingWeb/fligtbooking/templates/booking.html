@@ -42,7 +42,7 @@
 <!--        <input type="number" id="passengers" name="passengers" min="1" required>-->
 
          <label for="seat_map">Sơ đồ ghế:</label>
-                    <div id="seat_map">
+                    <div id="seat_map" data-thoi-gian-bay="{{ flight.thoiGianBay }}">
                     {% for seat in seats %}
                         <div class="seat {{ seat.status }}" id="seat_{{ seat.seat_number }}" data-number="{{ seat.seat_number }}"
                             data-hang="{{ seat.hang_ghe }}" data-ticket-price="{{ seat.ticketType.giaTien }}">
@@ -51,8 +51,11 @@
                         </div>
                     {% endfor %}
                     </div>
-           <label for="price">Giá tiền:</label>
-            <input type="text" id="price" name="price" readonly>
+            <input type="hidden" id="seat_selected" name="seat_selected">
+             <label for="total_price">Giá tiền:</label>
+                <input type="text" id="price" name = "price" readonly>
+             <label for="total_price">Tổng tiền phải thanh toán:</label>
+                <input type="text" id="total_price" name="total_price" readonly>
 
 
         <button type="submit" class="booking-btn">Đặt vé</button>
