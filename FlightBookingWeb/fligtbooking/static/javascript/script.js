@@ -43,19 +43,20 @@ document.addEventListener('DOMContentLoaded', function () {
     let selectedSeatElement = null; // Biến lưu ghế hiện tại được chọn
     let totalMinutes = 0; // Biến lưu tổng thời gian chuyến bay tính bằng phút
 
-    // Hàm tính tổng phút từ thời gian
-    function calculateTotalMinutes(timeString) {
-        if (!timeString) return 0;
-        const [hours, minutes, seconds] = timeString.split(':').map(Number);
-        return hours * 60 + minutes + (seconds || 0) / 60;
-    }
+ // Chuyển đổi thời gian sang giờ và làm tròn lên
+function calculateTotalHours(timeString) {
+    if (!timeString) return 0;
+    const [hours, minutes, seconds] = timeString.split(':').map(Number);
+    // Tính tổng giờ và làm tròn lên
+    return Math.ceil(hours + (minutes || 0) / 60 + (seconds || 0) / 3600);
+}
 
     // Lấy tổng thời gian chuyến bay từ dữ liệu
     function updateFlightTime() {
         const flightTime = seatMap ? seatMap.dataset.thoiGianBay : '';
         const hourInput = document.getElementById('hour');
         const hourString = hourInput ? hourInput.value : '';
-        totalMinutes = calculateTotalMinutes(flightTime || hourString);
+        totalMinutes = calculateTotalHours(flightTime || hourString);
         console.log('Total flight time (minutes):', totalMinutes);
     }
 

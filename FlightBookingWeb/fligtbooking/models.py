@@ -1,5 +1,6 @@
 import enum
 import json
+import math
 
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Time, Boolean, event, update
@@ -74,11 +75,11 @@ class ChuyenBay(db.Model):
             return self.thoiGianBay.strftime("%H:%M:%S")  # Chuyển Time thành chuỗi
         return "00:00:00"  # Trả về chuỗi mặc định nếu không có thời gian bay
 
-    # Phương thức tính tổng phút từ thời gian bay (giờ * 60 + phút)
-    def get_thoiGianBay_minutes(self):
+    def get_thoiGianBay_hours(self):
         if self.thoiGianBay:
-            return self.thoiGianBay.hour * 60 + self.thoiGianBay.minute  # Tính tổng phút
-        return 0  # Trả về 0 nếu không có thời gian bay
+            total_hours = self.thoiGianBay.hour + self.thoiGianBay.minute / 60 + self.thoiGianBay.second / 3600
+            return math.ceil(total_hours)
+        return 0
 
 
 

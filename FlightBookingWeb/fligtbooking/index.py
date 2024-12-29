@@ -25,24 +25,31 @@ def home():
     return render_template('index.html')  # Hiển thị trang chủ
 
 #hiển thị toàn bộ chuyến bay
-@app.route('/show_all_flights',methods=['GET','POST'])
+@app.route('/show_all_flights', methods=['GET', 'POST'])
 def show_all_flights():
     flights = dao.show_all_flights()
     booking_time = dao.get_current_regulation()
     booking_time_limit = booking_time.customer_booking_time
     current_time = datetime.now()
 
-    for flight in flights:
-        from_locationname = SanBayNameDAO.get_airport_name_by_id(flight.sanBayDi_id)
-        to_locationname = SanBayNameDAO.get_airport_name_by_id(flight.sanBayDen_id)
+    from_locationname = None  # Khởi tạo ngoài vòng lặp để tránh lỗi khi không có chuyến bay
+    to_locationname = None
 
+    if flights:  # Kiểm tra nếu có chuyến bay
+        from_locationname = []
+        to_locationname = []
 
+        for flight in flights:
+            from_locationname.append(SanBayNameDAO.get_airport_name_by_id(flight.sanBayDi_id))
+            to_locationname.append(SanBayNameDAO.get_airport_name_by_id(flight.sanBayDen_id))
 
-    return render_template("show_all_flights.html",flights=flights,from_locationname=from_locationname,
-                                                                    to_locationname=to_locationname,
-                                                                    timedelta=timedelta,
-                                                                    booking_time_limit=booking_time_limit,
-                                                                    current_time=current_time)
+    # Trả về trang với các giá trị cần thiết, bao gồm việc kiểm tra nếu không có chuyến bay
+    return render_template("show_all_flights.html", flights=flights,
+                           from_locationname=from_locationname,
+                           to_locationname=to_locationname,
+                           booking_time_limit=booking_time_limit,
+                           current_time=current_time)
+
 
 # Trang Đặt vé
 @app.route('/search', methods=['GET', 'POST'])
@@ -97,7 +104,8 @@ def booking(flight_id):
     # Get flight details based on the flight_id
     flight = dao.get_flight(flight_id)
     seats = []
-    total_minutes = flight.get_thoiGianBay_minutes()
+    # total_minutes = flight.get_thoiGianBay_minutes()
+    total_minutes = flight.get_thoiGianBay_hours()
     if flight:
         seats = dao.get_seats_by_maChuyenBay(flight.maChuyenBay)
         print(f"Tổng phút bay: {total_minutes}")  # Debug lo
