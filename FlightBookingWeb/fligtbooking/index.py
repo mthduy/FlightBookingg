@@ -36,12 +36,10 @@ def show_all_flights():
     to_locationname = None
 
     if flights:  # Kiểm tra nếu có chuyến bay
-        from_locationname = []
-        to_locationname = []
 
         for flight in flights:
-            from_locationname.append(SanBayNameDAO.get_airport_name_by_id(flight.sanBayDi_id))
-            to_locationname.append(SanBayNameDAO.get_airport_name_by_id(flight.sanBayDen_id))
+            from_locationname=(SanBayNameDAO.get_airport_name_by_id(flight.sanBayDi_id))
+            to_locationname=(SanBayNameDAO.get_airport_name_by_id(flight.sanBayDen_id))
 
     # Trả về trang với các giá trị cần thiết, bao gồm việc kiểm tra nếu không có chuyến bay
     return render_template("show_all_flights.html", flights=flights,
