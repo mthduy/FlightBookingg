@@ -48,7 +48,8 @@ def show_all_flights():
                            from_locationname=from_locationname,
                            to_locationname=to_locationname,
                            booking_time_limit=booking_time_limit,
-                           current_time=current_time)
+                           current_time=current_time,
+                           timedelta=timedelta)
 
 
 # Trang Đặt vé
