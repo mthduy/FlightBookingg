@@ -37,10 +37,13 @@ class TuyenBay(db.Model):
     sanBayDen_id = Column(Integer, ForeignKey('sanbay.id'), nullable=False)  # Sân bay đến
 
 
+
     # Mối quan hệ
     sanBayDi = relationship("SanBay", foreign_keys=[sanBayDi_id])  # Mối quan hệ với sân bay đi
     sanBayDen = relationship("SanBay", foreign_keys=[sanBayDen_id])  # Mối quan hệ với sân bay đến
     chuyenBays = relationship("ChuyenBay", back_populates="tuyenBay", cascade="all, delete")  # Đổi tên backref
+
+
 
 
 class ChuyenBay(db.Model):
@@ -62,6 +65,8 @@ class ChuyenBay(db.Model):
     # Mối quan hệ với bảng SanBayTrungGian (Sân bay trung gian) - Chuyến bay có thể có nhiều sân bay trung gian
     sanBayTrungGians = relationship("SanBayTrungGian", back_populates="chuyenBay", cascade="all, delete")
     veMayBays = relationship('VeMayBay', back_populates='chuyenBay', cascade='all, delete')
+
+
 
     # Phương thức chuyển thời gian bay thành chuỗi (giờ:phút:giây)
     def get_thoiGianBay_str(self):
@@ -206,8 +211,8 @@ class Regulation(db.Model):
     employee_sale_time = db.Column(db.Integer, nullable=False, default=4)
     ticket_class_count = db.Column(db.Integer, nullable=False, default=2)
     ticket_classes = db.Column(db.String(500),nullable=False, default=json.dumps([
-        {"class_name": "1", "price": 1000000, "count": 6},
-        {"class_name": "2", "price": 2000000, "count": 12}
+        {"class_name": "1", "price": 1000, "count": 6},
+        {"class_name": "2", "price": 1200, "count": 12}
     ]))
 
 

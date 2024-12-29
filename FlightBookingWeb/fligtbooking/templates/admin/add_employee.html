@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm Nhân Viên</title>
+    <link rel="stylesheet" href="/static/css/adminstyles.css">
+</head>
+<body class="custom-body">
+<h1 class="custom-h1">Thêm Nhân Viên</h1>
+
+<!-- Hiển thị thông báo lỗi nếu có -->
+{% if err_msg %}
+<p class="custom-error">{{ err_msg }}</p>
+{% endif %}
+
+<div class="custom-container">
+    <form method="POST" action="{{ url_for('admin_manage_employees.add_employee') }}" class="custom-form">
+        <label for="name" class="custom-label">Tên:</label>
+        <input type="text" id="name" name="name" class="custom-input" required><br>
+
+        <label for="email" class="custom-label">Email:</label>
+        <input type="email" id="email" name="email" class="custom-input" required><br>
+
+        <label for="password" class="custom-label">Mật khẩu:</label>
+        <input type="password" id="password" name="password" class="custom-input" required><br>
+
+        <label for="role" class="custom-label">Vai trò:</label>
+        <select id="role" name="role" class="custom-select" required>
+            <option value="EMPLOYEE">Nhân viên</option>  <!-- Gửi giá trị "EMPLOYEE" khi người dùng chọn Nhân viên -->
+        </select><br>
+
+
+        <button type="submit" class="custom-button">Thêm Nhân Viên</button>
+    </form>
+</div>
+
+<div class="custom-back-link">
+    <a href="{{ url_for('admin_manage_employees.index') }}">Quay lại trang quản lý nhân viên</a>
+</div>
+</body>
+</html>

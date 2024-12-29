@@ -1,18 +1,21 @@
+import hashlib
 import json
+from datetime import datetime
 
-from flask import redirect, request, flash
+from flask import redirect, request, flash, url_for, jsonify
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.fields import QuerySelectField
 from flask_login import current_user, logout_user
 from markupsafe import Markup
+from sqlalchemy.orm import aliased
 from wtforms.fields.choices import SelectField
 from wtforms.fields.simple import StringField
 from wtforms.validators import DataRequired
 from wtforms.widgets.core import html_params, Select
 
 from fligtbooking import app, db
-from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay, SanBay, Seat
+from fligtbooking.models import Role, Regulation, ChuyenBay, TuyenBay, SanBay, Seat, User, TicketType, VeMayBay
 
 # Cấu hình Admin trang home
 admin = Admin(app=app, name="Flight Booking", template_mode="bootstrap4")
@@ -112,10 +115,125 @@ class AdminChangeRegulationsView(MyBaseView):
 
 # View tùy chỉnh để quản lý nhân viên
 class AdminManageEmployeeView(MyBaseView):
-    @expose('/')
+    @expose('/', methods=['GET'])
     def index(self):
-        # Render file template admin_manage_employees.html từ thư mục admin
-        return self.render('admin/admin_manage_employees.html')
+        # Lấy danh sách tất cả nhân viên có vai trò là EMPLOYEE
+        query = User.query.filter(User.role == Role.EMPLOYEE.name)
+        employees = query.all()
+
+        # Render trang quản lý nhân viên, gửi dữ liệu nhân viên vào template
+        return self.render('admin/admin_manage_employees.html', users=employees)
+
+    @expose('/search_employee', methods=['GET'])
+    def search_employee(self):
+        err_msg = None
+        search_name = request.args.get('search_name', '').strip()
+
+        if not search_name:
+            err_msg = "Vui lòng nhập tên nhân viên để tìm kiếm."
+            flash(err_msg, "error")
+            return redirect(url_for('.index'))
+
+        query = User.query.filter(User.role == Role.EMPLOYEE.name)
+
+        try:
+            if search_name:
+                query = query.filter(User.name.ilike(f'%{search_name}%'))
+            employees = query.all()
+
+            if not employees:
+                err_msg = "Không tìm thấy nhân viên nào với tên đã nhập."
+                flash(err_msg, "error")
+
+        except Exception as e:
+            err_msg = f"Đã xảy ra lỗi khi tìm kiếm: {str(e)}"
+            flash(err_msg, "error")
+
+        return self.render('admin/admin_manage_employees.html', users=employees)
+
+    @expose('/add_employee', methods=['GET', 'POST'])
+    def add_employee(self):
+        err_msg = None
+        if request.method == 'POST':
+            name = request.form.get('name', '').strip()
+            email = request.form.get('email', '').strip()
+            password = request.form.get('password', '').strip()
+            role = request.form.get('role', '').strip()
+
+            if not name or not email or not password or not role:
+                err_msg = "Tất cả các trường phải được điền đầy đủ!"
+                return self.render('admin/add_employee.html', err_msg=err_msg)
+
+            user_exists = User.query.filter_by(email=email).first()
+            if user_exists:
+                err_msg = "Email đã tồn tại trong hệ thống!"
+                return self.render('admin/add_employee.html', err_msg=err_msg)
+                # Kiểm tra vai trò có hợp lệ không
+            if role != Role.EMPLOYEE.name:
+                err_msg = "Vai trò phải là Nhân Viên!"
+                return self.render('admin/add_employee.html', err_msg=err_msg)
+            try:
+                # Mã hóa mật khẩu
+                hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
+                new_user = User(name=name, email=email, password=hashed_password, role=Role.EMPLOYEE.name)
+                db.session.add(new_user)
+                db.session.commit()
+                flash("Thêm nhân viên thành công!", "success")
+                return redirect(url_for('.index'))
+            except Exception as e:
+                db.session.rollback()
+                err_msg = f"Lỗi khi thêm nhân viên: {e}"
+                print(f"Lỗi chi tiết: {e}")
+                return self.render('admin/add_employee.html', err_msg=err_msg)
+
+        return self.render('admin/add_employee.html', err_msg=err_msg)
+
+    @expose('/delete_employee/<int:id>', methods=['POST'])
+    def delete_employee(self, id):
+        err_msg = None
+        user = User.query.get(id)
+        if user:
+            try:
+                db.session.delete(user)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()  # Nếu có lỗi, rollback giao dịch
+                err_msg = f"Lỗi khi xóa nhân viên: {e}"
+                return self.render('admin/admin_manage_employees.html', err_msg=err_msg)
+
+            return redirect(url_for('.index'))
+
+        err_msg = "Không tìm thấy nhân viên hoặc không thể xóa!"
+        return self.render('admin/admin_manage_employees.html', err_msg=err_msg)
+
+    @expose('/edit_employee', methods=['POST'])
+    def edit_employee(self):
+        err_msg = None
+        user_id = request.form.get('id')
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        role = request.form.get('role', '').strip()
+
+        if role != Role.EMPLOYEE.name:
+            err_msg = "Vai trò không hợp lệ!"
+            return self.render('admin/admin_manage_employees.html', err_msg=err_msg)
+
+        user = User.query.get(user_id)
+        if user:
+            try:
+                user.name = name
+                user.email = email
+                user.role = Role.EMPLOYEE.name
+                db.session.commit()
+                return redirect(url_for('.index'))
+            except Exception as e:
+                db.session.rollback()  # Nếu có lỗi, rollback giao dịch
+                err_msg = f"Lỗi khi sửa thông tin nhân viên: {e}"
+                return self.render('admin/admin_manage_employees.html', err_msg=err_msg)
+
+        err_msg = "Không tìm thấy nhân viên!"
+        return self.render('admin/admin_manage_employees.html', err_msg=err_msg)
 
 class AdminManagerFlightsView(MyModelView):
     column_labels = {
@@ -239,8 +357,47 @@ class AdminManagerRoutesView(MyModelView):
 class AdminReportStatisticsView(MyBaseView):
     @expose('/')
     def index(self):
+        # Hiển thị giao diện thống kê
         return self.render('admin/admin_report_statistics.html')
 
+    @expose('/data', methods=['GET'])
+    def get_data(self):
+        month = request.args.get('month', default=datetime.now().month, type=int)
+        year = datetime.now().year  # Năm mặc định là năm hiện tại
+
+        # Truy vấn dữ liệu thống kê
+        stats = db.session.query(
+            TuyenBay.maTuyenBay.label('route'),
+            db.func.sum(VeMayBay.giaVe).label('revenue'),
+            db.func.count(ChuyenBay.id).label('flight_count')
+        ).join(ChuyenBay, TuyenBay.id == ChuyenBay.tuyenBay_id) \
+            .join(VeMayBay, VeMayBay.chuyenBay_id == ChuyenBay.id) \
+            .filter(
+            db.extract('month', ChuyenBay.thoiGianKhoiHanh) == month,
+            db.extract('year', ChuyenBay.thoiGianKhoiHanh) == year,
+            VeMayBay.hanhKhach_id.isnot(None)
+        ) \
+            .group_by(TuyenBay.maTuyenBay).all()
+
+        # Tính tổng doanh thu
+        total_revenue = sum(stat.revenue for stat in stats)
+
+        # Đảm bảo truyền total_revenue vào template
+        return self.render('admin/admin_report_statistics.html', stats=stats, month=month, year=year,
+                           total_revenue=total_revenue)
+
+    @app.template_filter('humanize')
+    def humanize_number(value):
+        try:
+            if isinstance(value, int):
+                # Định dạng số với dấu phân cách hàng nghìn
+                return f"{value:,}".replace(",", ".")
+            elif isinstance(value, float):
+                # Định dạng số thập phân với dấu phân cách
+                return f"{value:,.2f}".replace(",", ".")
+            return value
+        except Exception as e:
+            return value
 
 
 class LogoutView(MyBaseView):

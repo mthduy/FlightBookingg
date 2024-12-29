@@ -5,45 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý nhân viên - TravelSky</title>
     <link rel="stylesheet" href="/static/css/adminstyles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/javascript/script.js"></script>
 </head>
 <body>
-    <header class="navbar">
-        <a href="/" class="logo">TravelSky</a>
-        <nav class="menu">
-            <a href="{{ url_for('admin.index') }}" class="btn-primary">Quay lại</a>
-        </nav>
-    </header>
+<header class="navbar">
+    <a href="/" class="logo">TravelSky</a>
+    <nav class="menu">
+        <a href="{{ url_for('admin.index') }}" class="btn-primary">Quay lại</a>
+    </nav>
+</header>
 
-    <main class="manage-employees-main-container">
-        <h1>Quản lý nhân viên</h1>
-        <form>
-            <input type="text" placeholder="Nhập tên nhân viên..." />
-            <input type="text" placeholder="Chức vụ..." />
-            <button type="button">Thêm nhân viên</button>
-            <button type="button">Tìm kiếm</button>
-        </form>
-        <table>
-            <thead>
-                <tr>
-                    <th>Mã NV</th>
-                    <th>Tên</th>
-                    <th>Chức vụ</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>001</td>
-                    <td>Nguyễn Văn A</td>
-                    <td>Nhân viên bán vé</td>
-                    <td><button>Xóa</button> <button>Sửa</button></td>
-                </tr>
-            </tbody>
-        </table>
-    </main>
+<main class="manage-employees-main-container">
+    <h1>Quản lý nhân viên</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="alert-container">
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
 
-    <footer>
-        <p>© 2024 TravelSky</p>
-    </footer>
+    <form id="search-form" method="GET" action="{{ url_for('admin_manage_employees.search_employee')}}">
+        <input type="text" name="search_name" placeholder="Nhập tên nhân viên..."
+               value="{{ request.args.get('search_name', '') }}"/>
+        <input type="hidden" name="search_role" value="EMPLOYEE">
+        <button type="submit">Tìm kiếm</button>
+    </form>
+
+    <div id="error-message" style="color: red; display: none; margin-top: 20px;"></div>
+
+
+    <table>
+        <thead>
+        <tr>
+            <th>Mã NV</th>
+            <th>Tên</th>
+            <th>Email</th>
+            <th>Chức vụ</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if users %}
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role.value }}</td>
+            <td>
+                <!-- Form xóa nhân viên -->
+                <form action="{{ url_for('admin_manage_employees.delete_employee', id=user.id) }}" method="POST"
+                      class="form_delete">
+                    <button type="submit" onclick="return confirm('Bạn chắc chắn muốn xóa nhân viên này không?');">Xóa
+                    </button>
+                </form>
+                <form>
+                    <button onclick="openEditForm({{ user.id }}, '{{ user.name | escape }}', '{{ user.email | escape }}', '{{ user.role | escape }}')">
+                        Sửa
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="5">Không có nhân viên nào để hiển thị.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('admin_manage_employees.add_employee') }}" class="btn-primary">Thêm nhân viên</a>
+
+
+    <div id="edit-form" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditForm()">×</span>
+            <h3>Sửa thông tin nhân viên</h3>
+            <form method="POST" action="{{ url_for('admin_manage_employees.edit_employee') }}">
+                <input type="hidden" name="id" id="edit-id">
+                <input type="text" name="name" id="edit-name" placeholder="Tên" required>
+                <input type="email" name="email" id="edit-email" placeholder="Nhập email" required>
+                <input type="password" name="password" id="edit-password" placeholder="Nhập password" required>
+                <input type="hidden" name="role" id="edit-role-hidden">  <!-- Trường gửi giá trị "EMPLOYEE" -->
+                <input type="text" name="role_display" id="edit-role" value="Nhân Viên" disabled>
+                <!-- Hiển thị "Nhân Viên" cho người dùng -->
+                <button type="submit">Lưu thông tin</button>
+                <a href="{{ url_for('admin_manage_employees.index') }}" class="btn-back">Quay lại</a>
+            </form>
+        </div>
+    </div>
+
+
+</main>
+
+<footer>
+    <p>© 2024 TravelSky</p>
+</footer>
 </body>
 </html>

@@ -1,50 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thống kê báo cáo - TravelSky</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-     <link rel="stylesheet" href="/static/css/adminstyles.css">
-</head>
-<body>
-    <header class="navbar">
-        <a href="/" class="logo">TravelSky</a>
-        <nav class="menu">
-            <a href="{{ url_for('admin.index') }}" class="btn-primary">Quay lại</a>
-        </nav>
-    </header>
+{% extends 'admin/master.html' %}
 
-    <main class="admin-report-main-container">
-        <h1>Thống kê báo cáo</h1>
-        <form>
-            <label>Chọn tháng:</label>
-            <select>
-                <option>Tháng 1</option>
-                <option>Tháng 2</option>
-                <option>Tháng 3</option>
-                <!-- ... -->
-            </select>
-            <button type="button">Xem báo cáo</button>
-        </form>
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th>Tuyến bay</th>
-                    <th>Doanh thu</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Hà Nội - TP.HCM</td>
-                    <td>5,000,000,000 VND</td>
-                </tr>
-            </tbody>
-        </table>
-    </main>
+{% block body %}
+<div class="container-fluid mt-4">
+    <h2 class="text-center">Báo Cáo Doanh Thu Theo Tháng</h2>
+    <form method="GET" action="{{ url_for('admin_report_statistics.get_data') }}">
+    <div class="mb-3">
+        <label for="month" class="form-label">Chọn Tháng</label>
+        <select id="month" name="month" class="form-select">
+            {% for m in range(1, 13) %}
+            <option value="{{ m }}" {% if m == month %}selected{% endif %}>Tháng {{ m }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Xem Báo Cáo</button>
+</form>
 
-    <footer>
-        <p>© 2024 TravelSky</p>
-    </footer>
-</body>
-</html>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <table class="table table-bordered mt-4">
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tuyến Bay</th>
+                        <th>Doanh Thu</th>
+                        <th>Số Lượt Bay</th>
+                        <th>Tỷ Lệ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total_flights = 0 %}
+                    {% for stat in stats %}
+                    {% set total_flights = total_flights + stat.flight_count %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ stat.route }}</td>
+                        <td>{{ stat.revenue | int | humanize }}</td>
+                        <td>{{ stat.flight_count }}</td>
+                        <td>
+                            {% if total_revenue > 0 %}
+                            {{ (stat.revenue / total_revenue * 100) | round(2) }}%
+                            {% else %}
+                            0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <!-- Hiển thị tổng doanh thu ở cuối bảng -->
+                    <tr>
+                        <td colspan="2"><strong>Tổng Doanh Thu:</strong></td>
+                        <td colspan="3">{{ total_revenue | default(0) | int | humanize }}</td>
+
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <canvas id="revenueChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const revenueData = {
+        labels: {{ stats | map(attribute='route') | list | tojson }},
+        datasets: [{
+            label: 'Doanh Thu Tuyến Bay',
+            data: {{ stats | map(attribute='revenue') | list | tojson }},
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    const revenueChart = new Chart(ctx, {
+        type: 'bar',
+        data: revenueData,
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

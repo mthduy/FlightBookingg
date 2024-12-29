@@ -160,3 +160,36 @@ function enableSubmitButton() {
         const selectedSeat = document.getElementById('seat_selected').value;
         document.getElementById('submitButton').disabled = !selectedSeat; // Chỉ bật nút khi ghế được chọn
     }
+
+
+function openEditForm(id, name, email, role) {
+        var editForm = document.getElementById('edit-form');
+
+        // Hiển thị modal
+        editForm.style.display = 'flex';  // Modal sẽ hiển thị với flex
+
+        // Điền thông tin vào các trường trong modal
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-email').value = email;
+        document.getElementById('edit-role').value = 'Nhân Viên'; // Chỉ hiển thị 'Nhân Viên' trong UI
+        document.getElementById('edit-role-hidden').value = 'EMPLOYEE'; // Gửi 'EMPLOYEE' qua form
+
+
+        // Ngăn chặn sự kiện khác làm đóng modal tự động
+        event.preventDefault();  // Ngừng các sự kiện khác
+    }
+
+    // Đóng modal khi bấm nút đóng
+    function closeEditForm() {
+        var editForm = document.getElementById('edit-form');
+        editForm.style.display = 'none'; // Ẩn modal
+    }
+
+    // Ngăn form mặc định submit để tránh reload trang khi nhấn nút "Lưu"
+    document.getElementById("edit-form").addEventListener("submit", function(event) {
+        event.preventDefault();  // Ngừng submit mặc định
+
+        // Gửi thông tin sửa qua AJAX hoặc reload trang sau khi sửa
+        this.submit();  // Hoặc thực hiện AJAX để gửi dữ liệu
+    });
