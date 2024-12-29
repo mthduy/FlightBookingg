@@ -83,8 +83,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 const totalPrice = seatPrice * totalMinutes;
 
                 // Cập nhật giao diện
-                totalPriceInput.value = totalPrice.toFixed(2);
-                priceInput.value = seatPrice.toFixed(2);
+                totalPriceInput.value = totalPrice;
+                priceInput.value = seatPrice;
                 seatSelectedInput.value = seatElement.dataset.number;
 
                 enableSubmitButton();

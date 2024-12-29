@@ -97,9 +97,10 @@ def booking(flight_id):
     # Get flight details based on the flight_id
     flight = dao.get_flight(flight_id)
     seats = []
-
+    total_minutes = flight.get_thoiGianBay_minutes()
     if flight:
         seats = dao.get_seats_by_maChuyenBay(flight.maChuyenBay)
+        print(f"Tổng phút bay: {total_minutes}")  # Debug lo
 
     if request.method == 'POST':
         name = request.form['name']
@@ -107,25 +108,21 @@ def booking(flight_id):
         selected_seat = request.form['selected_seat']
         soDienThoai = request.form['soDienThoai']
         soCMND = request.form['soCMND']
-        total_price = request.form['total_price']
+        # Ensure price is converted to float
+        price = int(request.form['price'])
+
+        total_price=price*total_minutes
 
         if selected_seat not in [seat.seat_number for seat in seats]:
             err_msg = "Ghế bạn chọn không tồn tại hoặc đã được bán."
             return render_template('booking.html', flight=flight, seats=seats, err_msg=err_msg)
 
-        # Find the price for the selected seat
-        # price = dao.get_ticket_price_by_seat_number(selected_seat)
-        # if price is not None:
+
         return render_template('payment.html', flight=flight, name=name, email=email,
                                    selected_seat=selected_seat,
                                        soCMND=soCMND, soDienThoai=soDienThoai,total_price=total_price)
-    #
-    # err_msg = "Đã xảy ra lỗi trong quá trình đặt vé. Vui lòng thử lại."
-    # return render_template('booking.html', flight=flight, seats=seats, err_msg=err_msg)
 
-    # Render booking page for GET request
     return render_template('booking.html', flight=flight, seats=seats)
-
 
 
 @app.route('/payment/<flight_id>', methods=['POST', 'GET'])

@@ -63,6 +63,19 @@ class ChuyenBay(db.Model):
     sanBayTrungGians = relationship("SanBayTrungGian", back_populates="chuyenBay", cascade="all, delete")
     veMayBays = relationship('VeMayBay', back_populates='chuyenBay', cascade='all, delete')
 
+    # Phương thức chuyển thời gian bay thành chuỗi (giờ:phút:giây)
+    def get_thoiGianBay_str(self):
+        if self.thoiGianBay:
+            return self.thoiGianBay.strftime("%H:%M:%S")  # Chuyển Time thành chuỗi
+        return "00:00:00"  # Trả về chuỗi mặc định nếu không có thời gian bay
+
+    # Phương thức tính tổng phút từ thời gian bay (giờ * 60 + phút)
+    def get_thoiGianBay_minutes(self):
+        if self.thoiGianBay:
+            return self.thoiGianBay.hour * 60 + self.thoiGianBay.minute  # Tính tổng phút
+        return 0  # Trả về 0 nếu không có thời gian bay
+
+
 
 class TicketType(db.Model):
     __tablename__ = 'ticket_type'  # Khai báo tên bảng cho loại vé
