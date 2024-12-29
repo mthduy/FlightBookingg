@@ -321,15 +321,20 @@ def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, email, price
                 db.session.add(hanh_khach)
                 db.session.flush()  # Lấy ID của hành khách vừa thêm
         else:
-            # Nếu không tồn tại trong bảng User, tạo hành khách mới bình thường
-            hanh_khach = HanhKhach(
-                tenHanhKhach=tenHanhKhach,
-                soCMND=soCMND,
-                soDienThoai=soDienThoai,
-                email=email
-            )
-            db.session.add(hanh_khach)
-            db.session.flush()  # Lấy ID của hành khách vừa thêm
+            # Kiểm tra xem email có tồn tại trong bảng HanhKhach không
+            existing_hanh_khach = HanhKhach.query.filter_by(email=email).first()
+            if existing_hanh_khach:
+                hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
+            else:
+                # Nếu không tồn tại trong cả User và HanhKhach, tạo hành khách mới bình thường
+                hanh_khach = HanhKhach(
+                    tenHanhKhach=tenHanhKhach,
+                    soCMND=soCMND,
+                    soDienThoai=soDienThoai,
+                    email=email
+                )
+                db.session.add(hanh_khach)
+                db.session.flush()  # Lấy ID của hành khách vừa thêm
 
         # Tạo vé máy bay
         ticket = VeMayBay(
