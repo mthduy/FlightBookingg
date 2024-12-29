@@ -2,7 +2,7 @@ import hashlib
 import json
 from datetime import datetime
 
-from flask import redirect, request, flash, url_for, jsonify
+from flask import redirect, request, flash, url_for, jsonify, make_response
 from flask_admin import Admin, BaseView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.fields import QuerySelectField
@@ -398,6 +398,77 @@ class AdminReportStatisticsView(MyBaseView):
             return value
         except Exception as e:
             return value
+
+    @expose('/export_excel', methods=['GET'])
+    def export_excel(self):
+        from io import BytesIO
+        import openpyxl
+        from openpyxl.chart import BarChart, Reference
+
+        month = request.args.get('month', default=datetime.now().month, type=int)
+        year = datetime.now().year
+
+        # Truy vấn dữ liệu thống kê
+        stats = db.session.query(
+            TuyenBay.maTuyenBay.label('route'),
+            db.func.sum(VeMayBay.giaVe).label('revenue'),
+            db.func.count(ChuyenBay.id).label('flight_count')
+        ).join(ChuyenBay, TuyenBay.id == ChuyenBay.tuyenBay_id) \
+            .join(VeMayBay, VeMayBay.chuyenBay_id == ChuyenBay.id) \
+            .filter(
+            db.extract('month', ChuyenBay.thoiGianKhoiHanh) == month,
+            db.extract('year', ChuyenBay.thoiGianKhoiHanh) == year,
+            VeMayBay.hanhKhach_id.isnot(None)
+        ) \
+            .group_by(TuyenBay.maTuyenBay).all()
+
+        # Tính tổng doanh thu
+        total_revenue = sum(stat.revenue for stat in stats)
+
+        # Tạo workbook Excel
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"Tháng {month} - {year}"
+
+        # Header
+        headers = ["STT", "Tuyến Bay", "Doanh Thu", "Số Lượt Bay", "Tỷ Lệ (%)"]
+        ws.append(headers)
+
+        # Dữ liệu
+        for idx, stat in enumerate(stats, start=1):
+            percentage = round((stat.revenue / total_revenue * 100), 2) if total_revenue > 0 else 0
+            ws.append([idx, stat.route, stat.revenue, stat.flight_count, percentage])
+
+        # Tổng doanh thu
+        ws.append(["", "Tổng Doanh Thu", total_revenue, "", ""])
+
+        # Tạo biểu đồ
+        chart = BarChart()
+        chart.title = "Doanh Thu Tuyến Bay"
+        chart.x_axis.title = "Tuyến Bay"
+        chart.y_axis.title = "Doanh Thu"
+
+        # Lấy dữ liệu biểu đồ
+        categories = Reference(ws, min_col=2, min_row=2, max_row=len(stats) + 1)  # Tên tuyến bay
+        data = Reference(ws, min_col=3, min_row=1, max_row=len(stats) + 1)  # Doanh thu
+
+        chart.add_data(data, titles_from_data=True)
+        chart.set_categories(categories)
+        chart.height = 10  # Chiều cao biểu đồ
+        chart.width = 20  # Chiều rộng biểu đồ
+
+        # Thêm biểu đồ vào sheet
+        ws.add_chart(chart, "G2")  # Vị trí đặt biểu đồ
+
+        # Ghi vào file và trả về response
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        response = make_response(output.getvalue())
+        response.headers["Content-Disposition"] = f"attachment; filename=bao_cao_doanh_thu_{month}_{year}.xlsx"
+        response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        return response
 
 
 class LogoutView(MyBaseView):

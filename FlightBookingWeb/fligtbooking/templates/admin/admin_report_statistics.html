@@ -86,4 +86,8 @@
         }
     });
 </script>
+<a href="{{ url_for('admin_report_statistics.export_excel', month=month) }}" class="btn btn-success mt-3">
+    Xuất Excel
+</a>
+
 {% endblock %}
