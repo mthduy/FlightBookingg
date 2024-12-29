@@ -327,7 +327,7 @@ def employee_sell_ticket():
         email = request.form.get('email')
         price = request.form.get('price')
         selected_seat = request.form.get('seat_selected')  # Lấy ghế đã chọn từ form
-        soGioBay = request.form.get('hour')  # Số giờ bay
+        total_price=request.form.get('total_price')
         regulation = dao.get_current_regulation()
         employee_sale_time = regulation.employee_sale_time
         flight = dao.get_chuyenbay_by_maChuyenBay(ma_chuyen_bay)
@@ -335,33 +335,6 @@ def employee_sell_ticket():
         thoiGianKhoiHanh = flight.thoiGianKhoiHanh
         sale_deadline = thoiGianKhoiHanh - timedelta(hours=employee_sale_time)
         current_time = datetime.now()
-
-        # Kiểm tra giá trị price và soGioBay
-        try:
-            price = float(price)
-        except ValueError:
-            err_msg = "Giá vé không hợp lệ."
-            return render_template('employee/employee_sell_ticket.html',
-                                   flights=dao.get_all_flights(),
-                                   seats=seats,
-                                   err_msg=err_msg,
-                                   total_price=total_price)
-
-        # Tính số phút từ thời gian bay
-        soGioBay_minutes = dao.get_flight_duration_in_minutes(soGioBay)
-
-        # Kiểm tra giá trị soGioBay_minutes
-        if soGioBay_minutes is None or soGioBay_minutes <= 0:
-            err_msg = "Số giờ bay không hợp lệ."
-            return render_template('employee/employee_sell_ticket.html',
-                                   flights=dao.get_all_flights(),
-                                   seats=seats,
-                                   err_msg=err_msg,
-                                   total_price=total_price)
-
-        # Tính tổng tiền = giá vé * số phút bay
-        total_price = price * soGioBay_minutes
-        print(f"Price: {price}, Flight duration (in minutes): {soGioBay_minutes}, Total price: {total_price}")
 
         # Kiểm tra thời gian bán vé
         if current_time > sale_deadline:

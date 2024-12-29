@@ -34,35 +34,30 @@ function generateTicketClasses() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const flightSelect = document.getElementById('flight');  // Dropdown chuyến bay
-    const seatMap = document.getElementById('seat_map');  // Khu vực hiển thị sơ đồ ghế
-    const priceInput = document.getElementById('price');  // Input để hiển thị giá vé
-    const totalPriceInput = document.getElementById('total_price');  // Input để hiển thị tổng tiền
-
-    const seatSelectedInput = document.getElementById('seat_selected');  // Input ẩn để lưu số ghế đã chọn
+    const flightSelect = document.getElementById('flight'); // Dropdown chuyến bay
+    const seatMap = document.getElementById('seat_map'); // Khu vực hiển thị sơ đồ ghế
+    const priceInput = document.getElementById('price'); // Input để hiển thị giá vé
+    const totalPriceInput = document.getElementById('total_price'); // Input để hiển thị tổng tiền
+    const seatSelectedInput = document.getElementById('seat_selected'); // Input ẩn để lưu số ghế đã chọn
 
     let selectedSeatElement = null; // Biến lưu ghế hiện tại được chọn
-    let totalMinutes = 0;  // Biến lưu tổng thời gian chuyến bay tính bằng phút
+    let totalMinutes = 0; // Biến lưu tổng thời gian chuyến bay tính bằng phút
 
-    // Kiểm tra xem có dữ liệu thời gian bay từ dataset không
-const flightTime = seatMap ? seatMap.dataset.thoiGianBay : ''; // Lấy thoiGianBay từ dataset, mặc định là chuỗi rỗng
-console.log('flightTime:', flightTime);  // Debug log
-
-if (flightTime) {
-    const [hours, minutes, seconds] = flightTime.split(':').map(Number); // Tách ra hours, minutes, seconds
-    console.log('hours:', hours, 'minutes:', minutes, 'seconds:', seconds);  // Debug log
-    totalMinutes = hours * 60 + minutes + seconds / 60; // Tính tổng số phút
-} else {
-    // Nếu không có thoiGianBay từ dataset, thử lấy từ input hour
-    const hourInput = document.getElementById('hour');
-    const hourString = hourInput ? hourInput.value : '';
-    console.log('hourString:', hourString);  // Debug log
-    if (hourString) {
-        const [hours, minutes, seconds] = hourString.split(':').map(Number);
-        console.log('hours:', hours, 'minutes:', minutes, 'seconds:', seconds);  // Debug log
-        totalMinutes = hours * 60 + minutes + seconds / 60; // Tính tổng số phút
+    // Hàm tính tổng phút từ thời gian
+    function calculateTotalMinutes(timeString) {
+        if (!timeString) return 0;
+        const [hours, minutes, seconds] = timeString.split(':').map(Number);
+        return hours * 60 + minutes + (seconds || 0) / 60;
     }
-}
+
+    // Lấy tổng thời gian chuyến bay từ dữ liệu
+    function updateFlightTime() {
+        const flightTime = seatMap ? seatMap.dataset.thoiGianBay : '';
+        const hourInput = document.getElementById('hour');
+        const hourString = hourInput ? hourInput.value : '';
+        totalMinutes = calculateTotalMinutes(flightTime || hourString);
+        console.log('Total flight time (minutes):', totalMinutes);
+    }
 
     // Hàm gắn sự kiện click cho ghế
     function attachSeatEvents() {
@@ -84,35 +79,37 @@ if (flightTime) {
                 selectedSeatElement = seatElement;
 
                 // Lấy giá tiền và số ghế từ thuộc tính
-                const seatPrice = parseFloat(seatElement.dataset.ticketPrice);
+                const seatPrice = parseFloat(seatElement.dataset.ticketPrice) || 0;
+                const totalPrice = seatPrice * totalMinutes;
 
-                // Tính tổng tiền (giả sử tính theo thời gian chuyến bay)
-                const totalPrice = seatPrice * totalMinutes ; // Lấy tổng thời gian chuyến bay theo phút
+                // Cập nhật giao diện
+                totalPriceInput.value = totalPrice.toFixed(2);
+                priceInput.value = seatPrice.toFixed(2);
+                seatSelectedInput.value = seatElement.dataset.number;
 
-                // Cập nhật giá và ghế được chọn
-                totalPriceInput.value = totalPrice;
-                priceInput.value = seatPrice;
-                seatSelectedInput.value = seatElement.dataset.number; // Lưu số ghế đã chọn
+                enableSubmitButton();
             });
         });
     }
 
-    // Gắn sự kiện cho các ghế có sẵn khi DOM tải xong
+    // Gắn sự kiện cho các ghế hiện có
     attachSeatEvents();
 
     // Lắng nghe sự kiện thay đổi chuyến bay
     flightSelect.addEventListener('change', function () {
-        const maChuyenBay = flightSelect.value; // Lấy ID chuyến bay đã chọn
+        const maChuyenBay = flightSelect.value;
 
-        // Gửi yêu cầu AJAX (API call) tới Flask để lấy danh sách ghế
+        if (!maChuyenBay) {
+            alert('Vui lòng chọn một chuyến bay hợp lệ.');
+            return;
+        }
+
         fetch(`/api/seats?maChuyenBay=${maChuyenBay}`)
-            .then(response => response.json())  // Chuyển dữ liệu JSON từ API về
+            .then(response => response.json())
             .then(data => {
-                // Xóa sơ đồ ghế cũ
-                seatMap.innerHTML = '';
-                selectedSeatElement = null; // Reset ghế được chọn khi thay đổi chuyến bay
+                seatMap.innerHTML = ''; // Xóa sơ đồ ghế cũ
+                selectedSeatElement = null; // Reset ghế được chọn
 
-                // Tạo lại sơ đồ ghế mới dựa trên dữ liệu từ API
                 data.forEach(seat => {
                     const seatElement = document.createElement('div');
                     seatElement.classList.add('seat', seat.status);
@@ -123,31 +120,43 @@ if (flightTime) {
                     seatMap.appendChild(seatElement);
                 });
 
-                // Gắn lại sự kiện sau khi tạo ghế mới
-                attachSeatEvents();
+                attachSeatEvents(); // Gắn lại sự kiện click cho ghế
+                totalPriceInput.value = '0.00';
+                priceInput.value = '0.00';
+                seatSelectedInput.value = '';
             })
-            .catch(error => console.error('Error loading seat map:', error));  // Xử lý lỗi nếu có
+            .catch(error => console.error('Error loading seat map:', error));
+    });
+
+    // Lấy thời gian chuyến bay khi chọn chuyến bay
+    flightSelect.addEventListener('change', function () {
+        const flightCode = this.value;
+        if (flightCode) {
+            fetch(`/api/get_flight_duration?flight=${flightCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const hourInput = document.getElementById('hour');
+                        if (hourInput) hourInput.value = data.thoiGianBay;
+                        updateFlightTime();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => console.error('Error fetching flight info:', err));
+        }
+    });
+
+    // Cập nhật thời gian chuyến bay khi tải trang
+    window.addEventListener('load', function () {
+        updateFlightTime();
+        totalPriceInput.value = '0.00';
+        priceInput.value = '0.00';
+        seatSelectedInput.value = '';
     });
 });
-window.onload = function() {
-        // Lắng nghe sự kiện thay đổi giá trị trong dropdown (chọn chuyến bay)
-        document.getElementById('flight').addEventListener('change', function() {
-            const flightCode = this.value;  // Lấy mã chuyến bay từ dropdown
 
-            if (flightCode) {
-                // Gửi yêu cầu GET tới server để lấy thông tin thời gian bay
-                fetch(`/api/get_flight_duration?flight=${flightCode}`)
-                    .then(response => response.json())  // Chuyển đổi response thành JSON
-                    .then(data => {
-                        if (data.success) {
-                            // Gán thời gian bay vào input
-                            document.getElementById('hour').value = data.thoiGianBay;
-                        } else {
-                            // Thông báo lỗi nếu không có dữ liệu
-                            alert(data.message);
-                        }
-                    })
-                    .catch(err => console.error('Error fetching flight info:', err));  // Xử lý lỗi nếu có
-            }
-        });
-    };
+function enableSubmitButton() {
+        const selectedSeat = document.getElementById('seat_selected').value;
+        document.getElementById('submitButton').disabled = !selectedSeat; // Chỉ bật nút khi ghế được chọn
+    }
