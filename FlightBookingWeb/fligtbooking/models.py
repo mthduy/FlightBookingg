@@ -212,8 +212,8 @@ class Regulation(db.Model):
     employee_sale_time = db.Column(db.Integer, nullable=False, default=4)
     ticket_class_count = db.Column(db.Integer, nullable=False, default=2)
     ticket_classes = db.Column(db.String(500),nullable=False, default=json.dumps([
-        {"class_name": "1", "price": 1000, "count": 6},
-        {"class_name": "2", "price": 1200, "count": 12}
+        {"class_name": "1", "price": 1500000, "count": 6},
+        {"class_name": "2", "price": 1000000, "count": 12}
     ]))
 
 

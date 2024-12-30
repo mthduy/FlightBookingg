@@ -415,7 +415,7 @@ def send_email(to_email, customer_info):
     Thông tin chuyến bay:
     - Mã chuyến bay: {customer_info['maChuyenBay']}
     - Ghế đã chọn: {customer_info['selected_seat']}
-    - Tổng giá vé: {customer_info['price']} VND
+    - Tổng giá vé: {customer_info['total_price']} VND
     - Số điện thoại: {customer_info['soDienThoai']}
     - Email: {customer_info['email']}
 

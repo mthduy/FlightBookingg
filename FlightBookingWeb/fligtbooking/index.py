@@ -368,7 +368,7 @@ def employee_sell_ticket():
                 'name': name,
                 'maChuyenBay': ma_chuyen_bay,
                 'selected_seat': selected_seat,
-                'price': total_price,
+                'total_price': total_price,
                 'soDienThoai': soDienThoai,
                 'email': email
             }
