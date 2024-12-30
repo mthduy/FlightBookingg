@@ -511,26 +511,6 @@ def employee_schedule_flight():
                            ticket_classes=ticket_classes, max_intermediate_airports=max_intermediate_airports)
 
 
-@app.route('/admin_manage_employees')
-def admin_manage_employees():
-    return render_template('admin/admin_manage_employees.html')
-
-@app.route('/admin_report_statistics')
-def admin_report_statistics():
-    return render_template('admin_report_statistics.html')
-
-@app.route('/admin_change_regulations')
-def admin_change_regulations():
-    return render_template('admin_change_regulations.html')
-
-@app.route('/admin_manage_flights')
-def admin_manage_flights():
-    return render_template('admin_manage_flights.html')
-
-@app.route('/admin_manage_routes')
-def admin_manage_routes():
-    return render_template('admin_manage_routes.html')
-
 if __name__ == "__main__":
     with app.app_context():
         app.run(debug=True)

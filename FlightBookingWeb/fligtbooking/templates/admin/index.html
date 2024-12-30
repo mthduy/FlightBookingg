@@ -3,7 +3,7 @@
 {% block body %}
 {%if current_user.is_authenticated %}
     <img src="{{current_user.avatar}}" width="25" class="fluid rounded">
-    <h3>Chao {{current_user.name}}</h3>
+    <h3>Chào {{current_user.name}}</h3>
 {%else%}
 <h1>TRANG QUẢN TRỊ</h1>
 <form method="post" action="/login-admin">

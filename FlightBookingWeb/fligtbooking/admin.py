@@ -242,14 +242,15 @@ class AdminManagerFlightsView(MyModelView):
         'thoiGianKhoiHanh': 'Thời Gian Khởi Hành',
         'thoiGianDen': 'Thời Gian Đến',
         'thoiGianBay': 'Thời Gian Bay',
-        'tuyenBay_id': 'Mã Tuyến Bay '
+        'tuyenBay_id': 'ID Tuyến Bay ',
+        'tuyenBay.maTuyenBay':'Mã Tuyến Bay'
     }
     column_formatters = {
         'tuyenBay_id': lambda v, c, m, p: m.tuyenBay.maTuyenBay
     }
     column_list = ["maChuyenBay", "thoiGianKhoiHanh", "thoiGianDen", "thoiGianBay", "tuyenBay_id"]
-    column_searchable_list = ["id", "maChuyenBay"]
-    column_filters = ["id", "maChuyenBay"]
+    column_searchable_list = ["id", "maChuyenBay","tuyenBay.maTuyenBay","thoiGianDen", "thoiGianBay"]
+    column_filters = ["id", "maChuyenBay","tuyenBay.maTuyenBay","thoiGianDen", "thoiGianBay"]
     can_export = True
 
     form_extra_fields = {
@@ -306,14 +307,17 @@ class AdminManagerFlightsView(MyModelView):
 class AdminManagerRoutesView(MyModelView):
     column_labels = {
         'id': 'ID Tuyến Bay',
-        'maTuyenBay': 'Mã Chuyến Bay',
+        'maTuyenBay': 'Mã Tuyến Bay',
         'sanBayDi_id': 'Sân Bay Đi ',
         'sanBayDen_id': 'Sân Bay Đến ',
-        'maSanBay': 'Mã Sân Bay',
+        'sanBayDi.maSanBay': 'Mã Sân Bay Đi',
+        'sanBayDen.maSanBay': 'Mã Sân Bay Đến',
+        'sanBayDi.tenSanBay':'Tên Sân Bay Đi',
+        'sanBayDen.tenSanBay':'Tên Sân Bay Đến'
     }
     column_list = ["maTuyenBay", "sanBayDi_id", "sanBayDen_id"]
-    column_searchable_list = ["id", "maTuyenBay"]
-    column_filters = ["id", "maTuyenBay"]
+    column_searchable_list = ["id", "maTuyenBay","sanBayDi.maSanBay","sanBayDen.maSanBay","sanBayDi.tenSanBay","sanBayDen.tenSanBay"]
+    column_filters = ["id", "maTuyenBay","sanBayDi.maSanBay","sanBayDen.maSanBay","sanBayDi.tenSanBay","sanBayDen.tenSanBay"]
     can_export = True
     form_extra_fields = {
         'maTuyenBay': StringField('Mã Tuyến Bay', validators=[DataRequired()]),
