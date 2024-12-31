@@ -34,16 +34,16 @@ function generateTicketClasses() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const flightSelect = document.getElementById('flight'); // Dropdown chuyến bay
-    const seatMap = document.getElementById('seat_map'); // Khu vực hiển thị sơ đồ ghế
-    const priceInput = document.getElementById('price'); // Input để hiển thị giá vé
-    const totalPriceInput = document.getElementById('total_price'); // Input để hiển thị tổng tiền
-    const seatSelectedInput = document.getElementById('seat_selected'); // Input ẩn để lưu số ghế đã chọn
+    const flightSelect = document.getElementById('flight');
+    const seatMap = document.getElementById('seat_map');
+    const priceInput = document.getElementById('price');
+    const totalPriceInput = document.getElementById('total_price');
+    const seatSelectedInput = document.getElementById('seat_selected');
 
-    let selectedSeatElement = null; // Biến lưu ghế hiện tại được chọn
-    let totalMinutes = 0; // Biến lưu tổng thời gian chuyến bay tính bằng phút
+    let selectedSeatElement = null;
+    let totalMinutes = 0;
 
- // Chuyển đổi thời gian sang giờ và làm tròn lên
+
 function calculateTotalHours(timeString) {
     if (!timeString) return 0;
     const [hours, minutes, seconds] = timeString.split(':').map(Number);

@@ -156,7 +156,7 @@ class HanhKhach(db.Model):
     hanhKhach_id = Column(String(50), nullable=False,unique=True)
     tenHanhKhach = Column(String(50), nullable=False)
     soCMND = Column(String(20), nullable=False)
-    soDienThoai = Column(Integer, nullable=False)
+    soDienThoai = Column(String(20), nullable=False)
     email = Column(String(50), nullable=False,unique=True)
 
     # Thêm khóa ngoại liên kết với bảng User

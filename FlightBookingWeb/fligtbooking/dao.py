@@ -296,49 +296,32 @@ def get_all_flights():
 
 def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, email, price, selected_seat):
     try:
-        # Tìm chuyến bay theo mã
         chuyen_bay = ChuyenBay.query.filter_by(maChuyenBay=ma_chuyen_bay).first()
         if not chuyen_bay:
             raise ValueError("Chuyến bay không tồn tại")
 
-        # Kiểm tra xem email đã tồn tại trong bảng User chưa
-        existing_user = User.query.filter_by(email=email).first()
+        existing_hanh_khach = HanhKhach.query.filter_by(email=email).first()
 
-        if existing_user:
-            # Nếu email đã tồn tại trong bảng User, kiểm tra email trong HanhKhach
-            existing_hanh_khach = HanhKhach.query.filter_by(email=email).first()
-            if existing_hanh_khach:
-                hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
-            else:
-                # Nếu không tồn tại, tạo hành khách mới và liên kết với User.id
-                hanh_khach = HanhKhach(
-                    tenHanhKhach=tenHanhKhach,
-                    soCMND=soCMND,
-                    soDienThoai=soDienThoai,
-                    email=email,
-                    user_id=existing_user.id  # Liên kết với User.id
-                )
-                db.session.add(hanh_khach)
-                db.session.flush()  # Lấy ID của hành khách vừa thêm
+        if existing_hanh_khach:
+            if (existing_hanh_khach.tenHanhKhach != tenHanhKhach or
+                existing_hanh_khach.soCMND != soCMND or
+                existing_hanh_khach.soDienThoai != soDienThoai):
+                raise ValueError("Email đã đăng ký với thông tin khác")
+
+            hanh_khach = existing_hanh_khach
         else:
-            # Kiểm tra xem email có tồn tại trong bảng HanhKhach không
-            existing_hanh_khach = HanhKhach.query.filter_by(email=email).first()
-            if existing_hanh_khach:
-                hanh_khach = existing_hanh_khach  # Sử dụng hành khách đã tồn tại
-            else:
-                # Nếu không tồn tại trong cả User và HanhKhach, tạo hành khách mới bình thường
-                hanh_khach = HanhKhach(
-                    tenHanhKhach=tenHanhKhach,
-                    soCMND=soCMND,
-                    soDienThoai=soDienThoai,
-                    email=email
-                )
-                db.session.add(hanh_khach)
-                db.session.flush()  # Lấy ID của hành khách vừa thêm
+            hanh_khach = HanhKhach(
+                tenHanhKhach=tenHanhKhach,
+                soCMND=soCMND,
+                soDienThoai=soDienThoai,
+                email=email
+            )
+            db.session.add(hanh_khach)
+            db.session.flush()  
 
-        # Tạo vé máy bay
+        ticket_id = f"MB{hanh_khach.id:06d}-{chuyen_bay.id}-{selected_seat}"
         ticket = VeMayBay(
-            veMayBay_id=f"MB{hanh_khach.id:06d}",  # Sinh mã vé dựa trên ID hành khách
+            veMayBay_id=ticket_id,
             hanhKhach_id=hanh_khach.id,
             chuyenBay_id=chuyen_bay.id,
             email=email,
@@ -346,15 +329,14 @@ def create_ticket(ma_chuyen_bay, tenHanhKhach, soCMND, soDienThoai, email, price
             seat_number=selected_seat
         )
         db.session.add(ticket)
-
-        # Commit vào database
         db.session.commit()
 
         return ticket, None
 
     except Exception as e:
         db.session.rollback()
-        err_msg = "Email đã đăng ký"
+        print(f"Error occurred: {e}")
+        err_msg = "Có lỗi xảy ra, email đã được đăng kí với thông tin khác"
         return None, err_msg
 
 
